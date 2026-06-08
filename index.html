@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#FFFFFF">
+<title>Voyage — Group Travel Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Supabase JS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+/* ─── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  --brand:       #E8452C;
+  --brand-light: #FDF0ED;
+  --brand-dark:  #C03520;
+  --ink:         #1A1814;
+  --muted:       #7A7670;
+  --surface:     #FAFAF8;
+  --card:        #FFFFFF;
+  --border:      rgba(26,24,20,0.12);
+  --border-mid:  rgba(26,24,20,0.25);
+  --green:       #2E7D52;
+  --green-light: #E8F5EE;
+  --blue:        #2C5F8A;
+  --blue-light:  #EAF1F8;
+  --amber:       #856C00;
+  --amber-light: #FDFAE8;
+  --ff-display:  'Playfair Display', Georgia, serif;
+  --ff-body:     'DM Sans', system-ui, sans-serif;
+  --radius:      4px;
+  --radius-lg:   8px;
+}
+
+/* ─── RESET ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body   { font-family: var(--ff-body); background: var(--surface); color: var(--ink); font-size: 14px; line-height: 1.5; }
+button { font-family: var(--ff-body); cursor: pointer; }
+input, select, textarea { font-family: var(--ff-body); font-size: 13px; color: var(--ink); }
+
+/* ─── LAYOUT HELPERS ────────────────────────────────────────── */
+.flex         { display: flex; }
+.flex-center  { display: flex; align-items: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-wrap    { flex-wrap: wrap; }
+.gap-4  { gap: 4px; }  .gap-6  { gap: 6px; }
+.gap-8  { gap: 8px; }  .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+.grid-2    { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid-3    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 0; }
+.mt-8{margin-top:8px;}   .mt-12{margin-top:12px;}  .mt-16{margin-top:16px;}
+.mb-8{margin-bottom:8px;} .mb-12{margin-bottom:12px;} .mb-16{margin-bottom:16px;}
+
+/* ─── SURFACE / CARD ────────────────────────────────────────── */
+.card      { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius-lg); }
+.card-flat { background: var(--card); border: 0.5px solid var(--border); }
+.divider   { height: 0.5px; background: var(--border); margin: 14px 0; }
+
+/* ─── TAGS ──────────────────────────────────────────────────── */
+.tag       { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.tag-brand { background: var(--brand-light); color: #712B13; }
+.tag-blue  { background: var(--blue-light);  color: #0C447C; }
+.tag-green { background: var(--green-light); color: #27500A; }
+.tag-amber { background: var(--amber-light); color: var(--amber); }
+.tag-gray  { background: #F1EFE8; color: #444441; }
+
+/* ─── BUTTONS ───────────────────────────────────────────────── */
+.btn       { display: inline-flex; align-items: center; gap: 6px; padding: 8px 18px; border: 1.5px solid var(--ink); background: none; font-size: 13px; font-weight: 500; transition: background 0.18s, color 0.18s; color: var(--ink); border-radius: var(--radius); }
+.btn:hover { background: var(--ink); color: white; }
+.btn-brand { background: var(--brand); border-color: var(--brand); color: white; }
+.btn-brand:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.btn-sm    { padding: 4px 10px; font-size: 11px; }
+.btn-ghost { border-color: var(--border-mid); color: var(--muted); }
+.btn-ghost:hover { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+
+/* ─── FORM ELEMENTS ─────────────────────────────────────────── */
+.field-label { display: block; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 5px; }
+.field-row   { margin-bottom: 13px; }
+.field-input { width: 100%; padding: 8px 11px; border: 1px solid var(--border); background: var(--card); outline: none; border-radius: var(--radius); transition: border-color 0.18s; color: var(--ink); }
+.field-input:focus { border-color: var(--brand); }
+textarea.field-input { resize: vertical; }
+
+/* ─── APP SHELL ─────────────────────────────────────────────── */
+.app-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1.5px solid var(--ink); background: var(--card); position: sticky; top: 0; z-index: 100; }
+.logo    { font-family: var(--ff-display); font-size: 22px; font-weight: 700; }
+.logo em { color: var(--brand); font-style: italic; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.user-pill    { display: flex; align-items: center; gap: 8px; padding: 5px 12px; border: 0.5px solid var(--border); border-radius: 20px; font-size: 12px; }
+.user-av      { width: 24px; height: 24px; border-radius: 50%; background: var(--brand); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+/* ─── NAV TABS ──────────────────────────────────────────────── */
+.nav-tabs { display: flex; }
+.nav-tab  { padding: 6px 14px; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; border: none; background: none; color: var(--muted); border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+.nav-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.nav-tab:hover:not(.active) { color: var(--ink); }
+
+/* ─── PAGES ─────────────────────────────────────────────────── */
+.page        { display: none; }
+.page.active { display: block; }
+.page-header { padding: 22px 24px 14px; border-bottom: 0.5px solid var(--border); }
+.page-title  { font-family: var(--ff-display); font-size: 26px; font-weight: 700; line-height: 1.1; }
+.page-title em { color: var(--brand); }
+.page-sub    { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.page-body   { padding: 18px 24px; }
+.section-title { font-family: var(--ff-display); font-size: 15px; font-weight: 700; padding-bottom: 6px; border-bottom: 0.5px solid var(--border); margin-bottom: 12px; }
+
+/* ─── LOGIN ─────────────────────────────────────────────────── */
+#login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--surface); }
+.login-card   { background: var(--card); border: 1.5px solid var(--ink); padding: 48px 40px; max-width: 400px; width: 90%; text-align: center; }
+.login-logo   { font-family: var(--ff-display); font-size: 36px; font-weight: 700; margin-bottom: 8px; }
+.login-logo em{ color: var(--brand); font-style: italic; }
+.login-sub    { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.login-note   { font-size: 12px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
+.login-error  { color: var(--brand); font-size: 12px; margin-top: 12px; min-height: 18px; }
+
+/* ─── LOADING ───────────────────────────────────────────────── */
+#app-loading  { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.spinner      { width: 28px; height: 28px; border: 2px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── TOAST ─────────────────────────────────────────────────── */
+#toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+.toast           { padding: 10px 16px; border-radius: var(--radius-lg); font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: opacity 0.25s, transform 0.25s; }
+.toast.show      { opacity: 1; transform: translateY(0); }
+.toast-success   { background: var(--green); color: white; }
+.toast-error     { background: var(--brand); color: white; }
+.toast-info      { background: var(--ink);   color: white; }
+
+/* ─── DESTINATIONS ──────────────────────────────────────────── */
+.dest-controls { display: flex; gap: 8px; padding: 10px 24px; border-bottom: 0.5px solid var(--border); flex-wrap: wrap; align-items: center; }
+.dest-controls input, .dest-controls select { padding: 6px 10px; border: 0.5px solid var(--border); background: var(--card); border-radius: var(--radius); outline: none; color: var(--ink); font-size: 13px; }
+.dest-controls input { min-width: 180px; }
+.dest-scroll { max-height: 520px; overflow-y: auto; }
+.dest-card   { background: var(--card); border: 0.5px solid var(--border); padding: 14px; cursor: pointer; transition: background 0.15s; position: relative; }
+.dest-card:hover { background: #f5f4f0; }
+.dest-city   { font-family: var(--ff-display); font-size: 16px; font-weight: 700; }
+.dest-country{ font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 8px; }
+.size-badge  { position: absolute; top: 8px; right: 8px; }
+.mini-bars   { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; }
+.mini-bar-row{ display: flex; align-items: center; gap: 5px; }
+.mini-bar-lbl{ font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); width: 42px; flex-shrink: 0; }
+.mini-bar-track { flex: 1; height: 3px; background: #EEE; border-radius: 2px; overflow: hidden; }
+.mini-bar-fill  { height: 100%; border-radius: 2px; background: var(--brand); }
+.modal-wrap  { display: none; padding: 14px 24px; }
+.modal-wrap.open { display: block; }
+.modal-box   { background: var(--card); border: 1.5px solid var(--ink); max-width: 540px; margin: 0 auto; }
+.modal-head  { padding: 16px 20px 12px; border-bottom: 1.5px solid var(--ink); display: flex; justify-content: space-between; align-items: flex-start; }
+.modal-close { background: none; border: 1.5px solid var(--ink); width: 28px; height: 28px; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.modal-body  { padding: 16px 20px; }
+.rating-row  { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border); }
+.rating-row:last-child { border-bottom: none; }
+.rating-bar  { width: 70px; height: 4px; background: #EEE; border-radius: 2px; overflow: hidden; }
+.rating-fill { height: 100%; border-radius: 2px; background: var(--brand); }
+.rating-num  { font-size: 12px; font-weight: 500; color: var(--brand); width: 18px; text-align: right; }
+
+/* ─── STEP NAV ──────────────────────────────────────────────── */
+.step-nav  { display: flex; overflow-x: auto; border-bottom: 1.5px solid var(--ink); }
+.step-tab  { display: flex; align-items: center; gap: 7px; padding: 9px 14px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border: none; border-bottom: 2px solid transparent; background: none; white-space: nowrap; transition: color 0.18s, border-color 0.18s; }
+.step-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.step-tab.done   { color: var(--green); }
+.step-num  { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid currentColor; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+.step-tab.done .step-num { background: var(--green); border-color: var(--green); color: white; }
+.step-body  { padding: 18px 24px 28px; }
+.step-panel { display: none; }
+.step-panel.active { display: block; }
+
+/* ─── TRAVELER CARD ─────────────────────────────────────────── */
+.traveler-card { background: var(--card); border: 0.5px solid var(--border); padding: 14px; margin-bottom: 10px; border-radius: var(--radius-lg); }
+.t-avatar      { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.t-name-input  { font-size: 14px; font-weight: 500; border: none; outline: none; padding: 0; background: none; width: 140px; color: var(--ink); }
+.mode-btn      { padding: 4px 10px; font-size: 11px; border: 1px solid var(--border); background: none; color: var(--muted); transition: all 0.15s; border-radius: var(--radius); }
+.mode-btn.active { background: var(--brand); border-color: var(--brand); color: white; }
+.booking-check { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
+.booking-check input[type="checkbox"] { width: auto; }
+
+/* ─── DASHBOARD ─────────────────────────────────────────────── */
+.stat-grid  { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 8px; margin-bottom: 16px; }
+.stat-card  { background: var(--card); border: 0.5px solid var(--border); padding: 12px; border-radius: var(--radius-lg); }
+.stat-val   { font-family: var(--ff-display); font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+.stat-lbl   { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.match-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--card); border: 0.5px solid var(--border); cursor: pointer; transition: border-color 0.18s; margin-bottom: 6px; border-radius: var(--radius-lg); }
+.match-card:hover, .match-card.top { border-color: var(--brand); }
+.match-rank { font-family: var(--ff-display); font-size: 26px; font-weight: 700; color: var(--border); width: 26px; flex-shrink: 0; }
+.match-card.top .match-rank { color: var(--brand); }
+.match-city { font-family: var(--ff-display); font-size: 16px; font-weight: 700; }
+.match-score{ font-size: 18px; font-weight: 700; color: var(--brand); }
+
+/* ─── VOTE ──────────────────────────────────────────────────── */
+.vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 14px; }
+.vote-opt  { border: 1.5px solid var(--border); padding: 12px; cursor: pointer; background: var(--card); transition: border-color 0.18s, background 0.18s; border-radius: var(--radius-lg); }
+.vote-opt:hover, .vote-opt.selected { border-color: var(--brand); background: var(--brand-light); }
+.vote-city  { font-family: var(--ff-display); font-size: 15px; font-weight: 700; }
+.vote-check { float: right; width: 17px; height: 17px; border: 1.5px solid var(--border); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; }
+.vote-opt.selected .vote-check { background: var(--brand); border-color: var(--brand); color: white; }
+
+/* ─── RESULTS ───────────────────────────────────────────────── */
+.winner-banner { background: var(--ink); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 14px; border-radius: var(--radius-lg); }
+.winner-city   { font-family: var(--ff-display); font-size: 24px; font-weight: 700; font-style: italic; }
+.result-row    { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--card); border: 0.5px solid var(--border); margin-bottom: 5px; border-radius: var(--radius-lg); }
+.result-city   { font-family: var(--ff-display); font-size: 16px; font-weight: 700; flex: 1; }
+.vote-bar-bg   { flex: 1; height: 7px; background: #EEE; border-radius: 3px; overflow: hidden; }
+.vote-bar-fill { height: 100%; border-radius: 3px; background: var(--brand); transition: width 0.4s; }
+.vote-pct      { font-size: 13px; font-weight: 500; min-width: 36px; text-align: right; }
+
+/* ─── CITY CARD ─────────────────────────────────────────────── */
+.city-card      { border: 1.5px solid var(--ink); overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 16px; }
+.city-card-head { background: var(--ink); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+.city-card-name { font-family: var(--ff-display); font-size: 20px; font-weight: 700; font-style: italic; }
+.city-map       { background: #D6E8F5; height: 150px; overflow: hidden; }
+.city-map svg   { width: 100%; height: 100%; }
+.hotel-section  { padding: 14px 18px; }
+.hotel-tier-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin: 10px 0 6px; }
+.hotel-tier-lbl:first-child { margin-top: 0; }
+.hotel-grid     { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 6px; }
+.hotel-card     { border: 0.5px solid var(--border); padding: 9px 10px; background: var(--surface); border-radius: var(--radius); }
+.hotel-name     { font-size: 12px; font-weight: 500; margin-bottom: 2px; }
+.hotel-price    { font-size: 12px; font-weight: 500; color: var(--brand); margin-top: 3px; }
+
+/* ─── ITINERARY ─────────────────────────────────────────────── */
+.iti-view-toggle { display: flex; padding: 10px 24px; border-bottom: 0.5px solid var(--border); background: var(--card); }
+.view-btn { padding: 6px 16px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: none; color: var(--muted); transition: all 0.18s; }
+.view-btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.view-btn:last-child  { border-radius: 0 var(--radius) var(--radius) 0; border-left: none; }
+.view-btn.active { background: var(--brand); border-color: var(--brand); color: white; }
+.iti-overview  { padding: 16px 24px; overflow-x: auto; }
+.iti-ov-grid   { display: flex; gap: 6px; min-width: max-content; }
+.ov-day-col    { width: 140px; flex-shrink: 0; border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; cursor: pointer; transition: border-color 0.18s; background: var(--card); }
+.ov-day-col:hover { border-color: var(--brand); }
+.ov-day-head   { background: var(--ink); color: white; padding: 8px 10px; }
+.ov-weekday    { font-family: var(--ff-display); font-size: 14px; font-weight: 700; }
+.ov-date       { font-size: 10px; opacity: 0.65; margin-top: 1px; }
+.ov-slots      { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.ov-slot       { padding: 5px 7px; border-radius: var(--radius); font-size: 10px; line-height: 1.3; min-height: 28px; }
+.ov-slot-lbl   { font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; font-size: 9px; margin-bottom: 1px; }
+.ov-slot-val   { color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ov-slot.empty     { background: #F5F4F0; }
+.ov-slot.filled    { background: var(--brand-light); }
+.ov-slot.confirmed { background: var(--green-light); }
+.ov-slot-lbl.empty     { color: #BBBBBB; }
+.ov-slot-lbl.filled    { color: #712B13; }
+.ov-slot-lbl.confirmed { color: #27500A; }
+.ov-time-row   { padding: 0 8px 8px; display: flex; flex-direction: column; gap: 3px; }
+.ov-time-pill  { padding: 3px 6px; border-radius: var(--radius); font-size: 9px; display: flex; gap: 4px; align-items: center; }
+.ov-time-pill.empty  { background: #F0EFEB; color: #BBBBBB; }
+.ov-time-pill.filled { background: var(--blue-light); color: #0C447C; }
+.pill-time     { opacity: 0.6; }
+.ov-completion { padding: 6px 8px; border-top: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--muted); }
+.ov-prog-bar   { height: 4px; background: #EEE; border-radius: 2px; overflow: hidden; flex: 1; margin: 0 6px; }
+.ov-prog-fill  { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.3s; }
+.day-tabs  { display: flex; overflow-x: auto; border-bottom: 1.5px solid var(--ink); background: var(--card); }
+.day-tab   { padding: 9px 14px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; border: none; border-bottom: 2px solid transparent; background: none; color: var(--muted); transition: all 0.18s; }
+.day-tab.active { color: var(--brand); border-bottom: 2px solid var(--brand); background: var(--brand-light); }
+.day-panel { display: none; padding: 16px 24px; }
+.day-panel.active { display: block; }
+.day-panel-title { font-family: var(--ff-display); font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+.fixed-slots { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.fixed-slot  { background: var(--card); border: 0.5px solid var(--border); padding: 10px; border-radius: var(--radius-lg); }
+.fixed-slot-lbl   { font-size: 9px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); margin-bottom: 5px; }
+.fixed-slot-input { width: 100%; border: none; background: none; outline: none; font-size: 12px; color: var(--ink); padding: 0; }
+.fixed-slot-by    { font-size: 10px; color: var(--muted); margin-top: 5px; }
+.fixed-slot-by-input { border: none; border-bottom: 0.5px solid var(--border); background: none; font-size: 10px; width: 75px; outline: none; color: var(--ink); }
+.check-row { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+.check-row input[type="checkbox"] { width: auto; }
+.check-row label { font-size: 10px; color: var(--muted); }
+.time-blocks { display: flex; flex-direction: column; gap: 5px; }
+.time-block  { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.time-lbl    { padding: 9px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: #F8F8F6; border-right: 0.5px solid var(--border); display: flex; align-items: center; min-width: 60px; white-space: nowrap; }
+.time-input  { flex: 1; border: none; background: none; padding: 9px 11px; font-size: 12px; color: var(--ink); outline: none; }
+.saved-dot   { font-size: 10px; color: var(--green); margin-left: 8px; opacity: 0; transition: opacity 0.3s; }
+.saved-dot.show { opacity: 1; }
+
+/* ─── AVAILABILITY CALENDAR ──────────────────────────────── */
+.cal-instruction { background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: #0C447C; }
+.cal-instruction strong { font-weight: 600; }
+.cal-months   { display: flex; gap: 28px; flex-wrap: wrap; margin: 14px 0; }
+.cal-month    { min-width: 216px; }
+.cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+.cal-grid     { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding-bottom: 4px; }
+.cal-day      { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; border-radius: var(--radius); position: relative; transition: all 0.12s; border: 1.5px solid transparent; line-height: 1; }
+.cal-day.in-window { cursor: pointer; }
+.cal-day.in-window:hover { border-color: var(--brand); background: var(--brand-light); }
+.cal-day.cal-mine { background: var(--brand); color: white; font-weight: 600; cursor: pointer; }
+.cal-day.cal-mine:hover { background: var(--brand-dark); border-color: var(--brand-dark); }
+.cal-day.cal-out  { color: #CCCCCC; cursor: default; }
+.cal-heat1    { background: rgba(46,125,82,0.15); }
+.cal-heat2    { background: rgba(46,125,82,0.32); }
+.cal-heat3    { background: rgba(46,125,82,0.52); color: white; }
+.cal-heat4    { background: rgba(46,125,82,0.75); color: white; font-weight: 600; }
+.cal-cnt      { font-size: 7px; margin-top: 1px; opacity: 0.8; }
+.cal-legend   { display: flex; gap: 16px; font-size: 11px; color: var(--muted); margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.cal-legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; vertical-align: middle; margin-right: 4px; }
+.cal-dur-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.dur-btn      { padding: 5px 12px; font-size: 12px; border: 1.5px solid var(--border); background: none; color: var(--muted); border-radius: var(--radius); cursor: pointer; transition: all 0.15s; }
+.dur-btn:hover { border-color: var(--brand); color: var(--brand); }
+.dur-btn.active { background: var(--brand); border-color: var(--brand); color: white; font-weight: 600; }
+
+/* ─── PHOTOS ────────────────────────────────────────────────── */
+.photo-day-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.photo-grid     { display: grid; grid-template-columns: repeat(auto-fill, minmax(95px,1fr)); gap: 4px; }
+.photo-thumb    { aspect-ratio: 1; overflow: hidden; position: relative; background: var(--border); }
+.photo-thumb img{ width: 100%; height: 100%; object-fit: cover; }
+.photo-delete   { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(0,0,0,0.55); color: white; border: none; border-radius: 50%; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; }
+.photo-thumb:hover .photo-delete { display: flex; }
+.photo-add      { border: 1.5px dashed var(--border); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--muted); transition: border-color 0.18s, color 0.18s; aspect-ratio: 1; cursor: pointer; }
+.photo-add:hover{ border-color: var(--brand); color: var(--brand); }
+
+/* ─── CHAT ──────────────────────────────────────────────────── */
+.chat-wrap  { display: flex; flex-direction: column; height: 420px; }
+.chat-msgs  { flex: 1; overflow-y: auto; padding: 14px 22px; display: flex; flex-direction: column; gap: 9px; }
+.chat-msg   { display: flex; gap: 7px; align-items: flex-start; }
+.chat-msg.mine { flex-direction: row-reverse; }
+.chat-av    { width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.chat-bubble{ max-width: 65%; padding: 7px 11px; font-size: 13px; line-height: 1.5; border-radius: var(--radius-lg); }
+.chat-msg:not(.mine) .chat-bubble { background: var(--card); border: 0.5px solid var(--border); }
+.chat-msg.mine .chat-bubble       { background: var(--brand); color: white; }
+.chat-time  { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.chat-bar   { display: flex; border-top: 1.5px solid var(--ink); }
+.chat-bar input { flex: 1; border: none; padding: 11px 14px; font-size: 13px; outline: none; background: var(--card); color: var(--ink); }
+.chat-send  { padding: 9px 16px; background: var(--brand); border: none; color: white; font-size: 13px; font-weight: 500; }
+.chat-send:hover { background: var(--brand-dark); }
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 4px; }
+
+/* ─── PRIORITY RANKING ──────────────────────────────────────── */
+.prio-btn { padding: 6px 13px; font-size: 12px; border: 1.5px solid var(--border); background: none; color: var(--muted); transition: all 0.15s; border-radius: var(--radius); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.prio-btn:hover { border-color: var(--brand); color: var(--brand); }
+.prio-btn.prio-ranked { background: var(--brand); border-color: var(--brand); color: white; }
+.prio-num { width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.3); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
+/* ─── DRAG & DROP (itinerary overview) ──────────────────────── */
+.ov-time-pill[draggable] { cursor: grab; }
+.ov-time-pill.drag-over  { outline: 2px solid var(--brand); background: var(--brand-light) !important; color: #712B13 !important; }
+.ov-time-pill.dragging   { opacity: 0.35; }
+
+/* ─── UTILITY ───────────────────────────────────────────────── */
+.sr-only   { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.t-brand   { color: var(--brand); }
+.t-muted   { color: var(--muted); }
+.t-small   { font-size: 11px; }
+.t-upper   { text-transform: uppercase; letter-spacing: 0.07em; }
+.t-display { font-family: var(--ff-display); font-weight: 700; }
+
+/* ─── NAME PROMPT OVERLAY ───────────────────────────────────── */
+/*
+  Shown once on first sign-in when user_metadata.display_name is empty.
+  Sits above the main app — cannot be dismissed without entering a name.
+*/
+#name-prompt {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(26,24,20,0.65);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+#name-prompt.open { display: flex; }
+.name-card {
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  padding: 40px 36px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+}
+.name-card-title { font-family: var(--ff-display); font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.name-card-sub   { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+.name-card-error { font-size: 12px; color: var(--brand); margin-top: 10px; min-height: 16px; }
+
+/* ─── BOTTOM NAV (mobile only) ──────────────────────── */
+.bottom-nav { display: none; }
+.bottom-nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; border: none; background: none; color: var(--muted); font-size: 9px; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 0;
+  transition: color 0.18s; font-family: var(--ff-body); cursor: pointer;
+}
+.bottom-nav-btn.active { color: var(--brand); }
+.bottom-nav-btn svg { flex-shrink: 0; }
+
+/* ─── MOBILE LAYOUT ─────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Bottom navigation bar */
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--card); border-top: 1.5px solid var(--ink); z-index: 100;
+    height: 60px; padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Hide top nav, show bottom nav */
+  .nav-tabs { display: none; }
+
+  /* Compact header */
+  .app-header { padding: 10px 16px; }
+  #user-name  { display: none; }
+  .user-pill  { padding: 4px 8px; }
+  .header-right .btn-ghost { font-size: 10px; padding: 4px 8px; }
+
+  /* Page structure */
+  .page-header   { padding: 12px 16px 10px; }
+  .page-title    { font-size: 20px; }
+  .page-sub      { font-size: 11px; }
+  .page-body     { padding: 12px 16px 72px; }
+  .section-title { font-size: 13px; }
+
+  /* Clear fixed bottom nav */
+  .dest-scroll               { padding-bottom: 68px; }
+  .step-body                 { padding: 14px 16px 76px; }
+  .day-panel                 { padding: 12px 16px 76px; }
+  .iti-overview              { padding: 12px 16px 76px; }
+  #page-photos .page-body    { padding-bottom: 76px; }
+
+  /* Toast above bottom nav */
+  #toast-container { bottom: 68px; right: 16px; }
+
+  /* Destination controls → stack vertically */
+  .dest-controls { flex-direction: column; align-items: stretch; padding: 10px 16px; gap: 6px; }
+  .dest-controls input, .dest-controls select { min-width: 0; width: 100%; }
+
+  /* Multi-column grids → single column */
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .fixed-slots     { grid-template-columns: 1fr 1fr; }
+  .stat-grid       { grid-template-columns: 1fr 1fr; }
+  .vote-grid       { grid-template-columns: 1fr 1fr; }
+
+  /* Calendar → vertical stack */
+  .cal-months { flex-direction: column; gap: 20px; }
+
+  /* Destination modal → full-screen */
+  .modal-wrap.open {
+    position: fixed; inset: 0; z-index: 200; overflow-y: auto;
+    padding: 0; background: var(--surface);
+  }
+  .modal-box  { max-width: 100%; border: none; }
+  .modal-head { padding: 14px 16px 10px; border-bottom: 1.5px solid var(--ink); }
+  .modal-body { padding: 14px 16px 76px; }
+
+  /* Planning step nav → compact */
+  .step-tab { padding: 9px 8px; font-size: 10px; letter-spacing: 0.03em; }
+  .step-num { width: 15px; height: 15px; font-size: 9px; }
+
+  /* Itinerary header → stack */
+  #page-itinerary .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .iti-view-toggle { padding: 0; }
+
+  /* Chat → fill remaining viewport */
+  .chat-wrap { height: calc(100dvh - 120px); }
+
+  /* Photo day tabs → horizontal scroll */
+  .photo-day-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+  .photo-day-tabs .btn { flex-shrink: 0; }
+
+  /* Forms */
+  .login-card { padding: 32px 20px; }
+  .name-card  { padding: 28px 20px; }
+
+  /* Winner banner */
+  .winner-banner { flex-direction: column; gap: 8px; }
+
+  /* Ensure mode buttons wrap on small screens */
+  .mode-btn { font-size: 10px; padding: 4px 8px; }
+}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">Voyage — Group Travel Planner</h2>
+
+<!-- ═══ LOADING ══════════════════════════════════════════════ -->
+<div id="app-loading"><div class="spinner"></div></div>
+
+<!-- ═══ NAME PROMPT (first sign-in only) ════════════════════ -->
+<div id="name-prompt">
+  <div class="name-card">
+    <div class="name-card-title">Welcome to voyage<em style="color:var(--brand);font-style:italic;">.</em></div>
+    <p class="name-card-sub">
+      What should we call you?<br>
+      This name appears on your votes, itinerary entries, and in the group chat.
+    </p>
+    <input class="field-input" type="text" id="name-input"
+      placeholder="Your first name or nickname"
+      maxlength="40"
+      style="font-size:15px;text-align:center;margin-bottom:12px;"
+      onkeydown="if(event.key==='Enter') Auth.saveName()">
+    <button class="btn btn-brand" style="width:100%;justify-content:center;"
+      onclick="Auth.saveName()">
+      Join the group
+    </button>
+    <p class="name-card-error" id="name-error"></p>
+  </div>
+</div>
+
+<!-- ═══ LOGIN ════════════════════════════════════════════════ -->
+<div id="login-screen" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">voyage<em>.</em></div>
+    <div class="login-sub">Group travel planning, together.</div>
+
+    <!-- State A: enter email -->
+    <div id="login-email-form">
+      <input class="field-input" type="email" id="login-email"
+        placeholder="Your email address"
+        style="margin-bottom:12px;font-size:14px;"
+        onkeydown="if(event.key==='Enter') Auth.sendMagicLink()">
+      <button class="btn btn-brand" style="width:100%;justify-content:center;"
+        onclick="Auth.sendMagicLink()">
+        Send sign-in link
+      </button>
+      <p class="login-note">We'll email you a sign-in link — no password needed.</p>
+    </div>
+
+    <!-- State B: link sent -->
+    <div id="login-link-sent" style="display:none;">
+      <div style="font-size:32px;margin-bottom:12px;">✉</div>
+      <div style="font-size:15px;font-weight:500;margin-bottom:8px;">Check your inbox</div>
+      <p class="login-note">
+        We sent a sign-in link to <strong id="login-email-display"></strong>.
+        Click it to open the app — works on any device.
+      </p>
+      <button class="btn btn-ghost btn-sm"
+        style="margin-top:16px;width:100%;justify-content:center;"
+        onclick="Auth.resetLoginForm()">
+        Use a different email
+      </button>
+    </div>
+
+    <p class="login-error" id="login-error"></p>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ══════════════════════════════════════════════ -->
+<div id="main-app" style="display:none;">
+
+  <header class="app-header">
+    <div class="logo">voyage<em>.</em></div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-page="destinations" onclick="App.switchPage('destinations',this)">Destinations</button>
+      <button class="nav-tab" data-page="planning" onclick="App.switchPage('planning',this)">Plan Trip</button>
+      <button class="nav-tab" data-page="itinerary" onclick="App.switchPage('itinerary',this)">Itinerary</button>
+      <button class="nav-tab" data-page="photos" onclick="App.switchPage('photos',this)">Photos</button>
+      <button class="nav-tab" data-page="chat" onclick="App.switchPage('chat',this)">Chat</button>
+    </nav>
+    <div class="header-right">
+      <div class="user-pill">
+        <div class="user-av" id="user-av">?</div>
+        <span id="user-name">...</span>
+      </div>
+      <button class="btn btn-sm btn-ghost" onclick="Auth.signOut()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- DESTINATIONS -->
+  <section class="page active" id="page-destinations">
+    <div class="page-header flex-between flex-wrap gap-12">
+      <div>
+        <div class="page-title">European <em>Destination</em> Library</div>
+        <div class="page-sub">100 destinations · AI-rated across 7 dimensions · Click any city for full breakdown</div>
+      </div>
+      <span class="tag tag-brand">100 cities</span>
+    </div>
+    <div class="dest-controls">
+      <input type="text" id="dest-search" placeholder="Search city or country..." oninput="Destinations.filter()">
+      <select id="dest-size" onchange="Destinations.filter()">
+        <option value="">All sizes</option>
+        <option>Large City</option><option>Medium City</option>
+        <option>Small City</option><option>Village</option>
+      </select>
+      <select id="dest-budget" onchange="Destinations.filter()">
+        <option value="">All budgets</option>
+        <option value="5">Budget-friendly</option><option value="4">Good value</option>
+        <option value="3">Average</option><option value="2">Pricey</option><option value="1">Luxury</option>
+      </select>
+      <select id="dest-sort" onchange="Destinations.filter()">
+        <option value="alpha">A–Z</option>
+        <option value="score">Highest rated</option>
+        <option value="budget">Best value</option>
+        <option value="nature">Best nature</option>
+        <option value="dining">Best dining</option>
+      </select>
+    </div>
+    <div class="dest-scroll">
+      <div class="grid-auto" id="dest-grid"></div>
+    </div>
+    <div class="modal-wrap" id="dest-modal">
+      <div class="modal-box">
+        <div class="modal-head">
+          <div>
+            <div class="t-display" style="font-size:22px;" id="modal-city"></div>
+            <div class="t-muted t-small t-upper mt-8" id="modal-country"></div>
+          </div>
+          <button class="modal-close" onclick="Destinations.closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLANNING -->
+  <section class="page" id="page-planning">
+    <div class="page-header">
+      <div class="page-title">Trip <em>Planner</em></div>
+    </div>
+    <nav class="step-nav" id="step-nav"></nav>
+    <div class="step-body" id="step-body"></div>
+  </section>
+
+  <!-- ITINERARY -->
+  <section class="page" id="page-itinerary">
+    <div class="page-header flex-between">
+      <div>
+        <div class="page-title">Trip <em>Itinerary</em></div>
+        <div class="page-sub" id="iti-subtitle">Confirm your trip in the planner to build the itinerary.</div>
+      </div>
+      <div class="iti-view-toggle">
+        <button class="view-btn active" id="vbtn-overview" onclick="Itinerary.switchView('overview')">All Days</button>
+        <button class="view-btn"        id="vbtn-detail"   onclick="Itinerary.switchView('detail')">Day Detail</button>
+      </div>
+    </div>
+    <div id="iti-overview-panel">
+      <div class="iti-overview"><div class="iti-ov-grid" id="iti-ov-grid"></div></div>
+    </div>
+    <div id="iti-detail-panel" style="display:none;">
+      <div class="day-tabs"  id="day-tabs"></div>
+      <div id="day-panels"></div>
+    </div>
+  </section>
+
+  <!-- PHOTOS -->
+  <section class="page" id="page-photos">
+    <div class="page-header flex-between">
+      <div>
+        <div class="page-title">Trip <em>Photos</em></div>
+        <div class="page-sub">Up to 15 photos per day · Stored in the cloud · Shared with the group</div>
+      </div>
+      <button class="btn btn-brand btn-sm" onclick="Photos.generatePhotobook()">
+        Generate Photobook ↗
+      </button>
+    </div>
+    <div class="page-body">
+      <div class="photo-day-tabs" id="photo-day-tabs"></div>
+      <div class="photo-grid"     id="photo-grid"></div>
+    </div>
+  </section>
+
+  <!-- CHAT -->
+  <section class="page" id="page-chat">
+    <div class="page-header flex-between">
+      <div>
+        <div class="page-title">Group <em>Chat</em></div>
+        <div class="page-sub">Real-time · All participants</div>
+      </div>
+      <div class="flex-center gap-6">
+        <span class="online-dot"></span>
+        <span id="online-count" class="t-small t-muted">0 online</span>
+      </div>
+    </div>
+    <div class="chat-wrap">
+      <div class="chat-msgs" id="chat-msgs"></div>
+      <div class="chat-bar">
+        <input type="text" id="chat-input"
+          placeholder="Message the group..."
+          onkeydown="if(event.key==='Enter') Chat.send()">
+        <button class="chat-send" onclick="Chat.send()">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM NAV (mobile) -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-btn active" data-page="destinations" onclick="App.switchPage('destinations',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><circle cx="11" cy="11" r="3"/>
+        <path d="M11 3v2M11 17v2M3 11h2M17 11h2"/>
+      </svg>
+      Explore
+    </button>
+    <button class="bottom-nav-btn" data-page="planning" onclick="App.switchPage('planning',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="5" width="14" height="14" rx="2"/>
+        <path d="M8 5V3M14 5V3M4 9h14M8 13h2M12 13h2M8 16h2"/>
+      </svg>
+      Plan
+    </button>
+    <button class="bottom-nav-btn" data-page="itinerary" onclick="App.switchPage('itinerary',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 6h14M4 11h14M4 16h10"/>
+      </svg>
+      Schedule
+    </button>
+    <button class="bottom-nav-btn" data-page="photos" onclick="App.switchPage('photos',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="7" width="18" height="12" rx="2"/>
+        <circle cx="11" cy="13" r="3"/>
+        <path d="M8 7l1.5-2h3L14 7"/>
+      </svg>
+      Photos
+    </button>
+    <button class="bottom-nav-btn" data-page="chat" onclick="App.switchPage('chat',this)">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H8l-5 3V5a1 1 0 0 1 1-1z"/>
+      </svg>
+      Chat
+    </button>
+  </nav>
+
+</div><!-- /main-app -->
+
+<div id="toast-container"></div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════════════════
+   SUPABASE CLIENT
+   — All Supabase interaction is isolated in the DB object.
+   — To extend the schema, add a method to DB only.
+═══════════════════════════════════════════════════════════════ */
+const { createClient } = supabase;
+const sb = createClient(
+  'https://czrujgsqjticquugeeyw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnVqZ3NxanRpY3F1dWdlZXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDIyNTQsImV4cCI6MjA5MzAxODI1NH0.PAmYZCdS8FpsEYYNXazE5A2l-ss1DU206ob5GauYg7E'
+);
+
+const TRIP_ID = 'default';
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════════ */
+const AVATARS     = ['#D85A30','#185FA5','#1D9E75','#D4537E','#BA7517','#534AB7','#E24B4A','#2E7D52'];
+const DIMS        = ['Lodging','Dining','Culture','Nature','Nightlife','Budget'];
+const WEEKDAYS    = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS_S    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TIME_BLOCKS = ['7–10am','10am–1pm','1–4pm','4–7pm','7–10pm'];
+const FIXED_SLOTS = ['Hotel','Lunch','Dinner'];
+const SIZE_COLORS = { 'Large City':'#185FA5','Medium City':'#1D9E75','Small City':'#BA7517','Village':'#D4537E' };
+
+const RATING_TEXTS = {
+  Lodging:  ['','Very limited','Some options','Moderate range','Good range incl. luxury','Wide range, all budgets'],
+  Dining:   ['','Very limited','Mainly local','Mix of local & international','Wide eclectic range','World-class dining'],
+  Culture:  ['','Few sights','A few notable sites','Moderate offering','Rich culture & museums','Exceptional world-class sights'],
+  Nature:   ['','Over 1hr away','Within ~1 hour','30–60 min away','Within 30 min','Exceptional nature on doorstep'],
+  Nightlife:['','Very limited','A few bars','Decent bars & shows','Lively scene','World-class nightlife'],
+  Budget:   ['','Very expensive','Pricey vs peers','Average','Good value','Excellent value']
+};
+
+const HOTEL_DATA = {
+  Paris:     { luxury:['Le Bristol Paris — €900/night','Four Seasons George V — €1,100/night','Hôtel de Crillon — €850/night','Shangri-La Paris — €800/night','Peninsula Paris — €950/night'], medium:['Hotel Fabric — €180/night','Le Mareuil — €160/night','Hôtel des Grands Boulevards — €170/night','Hotel Molitor — €220/night','Petit Moulin — €200/night'], budget:['Generator Paris — €35/night','Ibis Gare de Lyon — €90/night','Hotel Jeanne d\'Arc — €85/night','Cosmos Hotel — €75/night','Arty Paris — €70/night'] },
+  Barcelona: { luxury:['Hotel Arts — €450/night','Mandarin Oriental — €500/night','W Barcelona — €380/night','Hotel Majestic — €350/night','Casa Camper — €320/night'], medium:['Hotel Jazz — €120/night','Praktik Rambla — €110/night','Ohla Barcelona — €170/night','Almanac Barcelona — €200/night','Catalonia Eixample — €130/night'], budget:['Generator Barcelona — €28/night','Kabul Hostel — €22/night','HCC Montblanc — €75/night','Ibis Barcelona — €80/night','Pension Paloma — €55/night'] },
+  Amsterdam: { luxury:['Conservatorium — €550/night','Waldorf Astoria — €600/night','Pulitzer Amsterdam — €480/night','The Dylan — €450/night','Hotel V Nesplein — €320/night'], medium:['INK Hotel — €180/night','Sir Adam Hotel — €200/night','The Exchange — €160/night','Hotel Brouwer — €140/night','Kimpton De Witt — €190/night'], budget:['StayOkay Vondelpark — €35/night','Flying Pig — €30/night','Ibis Amsterdam — €110/night','Hans Brinker — €65/night','City Hotel — €80/night'] },
+  Rome:      { luxury:['Hotel de Russie — €700/night','Hassler Roma — €900/night','Portrait Roma — €650/night','Hotel Eden — €750/night','Il Palazzetto — €580/night'], medium:['Campo de Fiori — €160/night','Hotel Raphael — €220/night','Albergo del Senato — €200/night','Trilussa Palace — €180/night','Hotel Navona — €160/night'], budget:['Generator Rome — €28/night','The Yellow — €32/night','Residenza Canali — €70/night','Hotel Navona — €75/night','Arco del Lauro — €65/night'] },
+  _default:  { luxury:['Grand Palace Hotel — €400/night','Luxury Collection — €380/night','Five-Star Boutique — €350/night','Premium Spa Resort — €420/night','Heritage Luxury — €390/night'], medium:['Design Boutique — €130/night','City Center Hotel — €140/night','Boutique Inn — €120/night','Charming B&B — €110/night','Curated Guesthouse — €100/night'], budget:['City Hostel — €25/night','Budget Hotel — €65/night','Backpackers Inn — €22/night','Economy Guesthouse — €55/night','Capsule Hotel — €40/night'] }
+};
+
+const MAP_COORDS = {
+  Paris:{cx:0.47,cy:0.38},Berlin:{cx:0.54,cy:0.30},Rome:{cx:0.54,cy:0.52},
+  Barcelona:{cx:0.42,cy:0.47},Amsterdam:{cx:0.48,cy:0.32},Vienna:{cx:0.56,cy:0.38},
+  Madrid:{cx:0.37,cy:0.47},Prague:{cx:0.55,cy:0.34},Budapest:{cx:0.58,cy:0.37},
+  Lisbon:{cx:0.29,cy:0.52},Athens:{cx:0.60,cy:0.57},Stockholm:{cx:0.57,cy:0.21},
+  _default:{cx:0.52,cy:0.42}
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   DESTINATION DATA  (100 entries)
+═══════════════════════════════════════════════════════════════ */
+const RAW_DESTINATIONS = [
+  {city:'Paris',country:'France',size:'Large City',scores:{Lodging:5,Dining:5,Culture:5,Nature:2,Nightlife:5,Budget:2}},
+  {city:'Amsterdam',country:'Netherlands',size:'Large City',scores:{Lodging:4,Dining:4,Culture:5,Nature:3,Nightlife:4,Budget:3}},
+  {city:'Barcelona',country:'Spain',size:'Large City',scores:{Lodging:4,Dining:5,Culture:4,Nature:4,Nightlife:5,Budget:3}},
+  {city:'Rome',country:'Italy',size:'Large City',scores:{Lodging:4,Dining:5,Culture:5,Nature:2,Nightlife:3,Budget:3}},
+  {city:'Prague',country:'Czech Republic',size:'Medium City',scores:{Lodging:4,Dining:3,Culture:4,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Lisbon',country:'Portugal',size:'Medium City',scores:{Lodging:4,Dining:4,Culture:4,Nature:3,Nightlife:4,Budget:4}},
+  {city:'Vienna',country:'Austria',size:'Large City',scores:{Lodging:4,Dining:4,Culture:5,Nature:3,Nightlife:3,Budget:3}},
+  {city:'Dubrovnik',country:'Croatia',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:2,Budget:3}},
+  {city:'Bruges',country:'Belgium',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:2,Nightlife:2,Budget:3}},
+  {city:'Santorini',country:'Greece',size:'Village',scores:{Lodging:3,Dining:3,Culture:2,Nature:5,Nightlife:2,Budget:2}},
+  {city:'Porto',country:'Portugal',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:3,Nature:3,Nightlife:3,Budget:5}},
+  {city:'Edinburgh',country:'Scotland',size:'Medium City',scores:{Lodging:4,Dining:3,Culture:5,Nature:4,Nightlife:4,Budget:3}},
+  {city:'Florence',country:'Italy',size:'Medium City',scores:{Lodging:3,Dining:5,Culture:5,Nature:2,Nightlife:2,Budget:3}},
+  {city:'Seville',country:'Spain',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:4,Nature:2,Nightlife:4,Budget:4}},
+  {city:'Budapest',country:'Hungary',size:'Large City',scores:{Lodging:4,Dining:4,Culture:4,Nature:3,Nightlife:5,Budget:5}},
+  {city:'Tallinn',country:'Estonia',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:3,Budget:5}},
+  {city:'Copenhagen',country:'Denmark',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:2,Nightlife:3,Budget:2}},
+  {city:'Ghent',country:'Belgium',size:'Small City',scores:{Lodging:3,Dining:4,Culture:4,Nature:2,Nightlife:3,Budget:4}},
+  {city:'Valletta',country:'Malta',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Ljubljana',country:'Slovenia',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:2,Budget:4}},
+  {city:'Krakow',country:'Poland',size:'Medium City',scores:{Lodging:4,Dining:3,Culture:4,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Reykjavik',country:'Iceland',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:3,Budget:2}},
+  {city:'Valencia',country:'Spain',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:4,Nightlife:4,Budget:4}},
+  {city:'Athens',country:'Greece',size:'Large City',scores:{Lodging:3,Dining:4,Culture:5,Nature:2,Nightlife:4,Budget:4}},
+  {city:'Cinque Terre',country:'Italy',size:'Village',scores:{Lodging:2,Dining:3,Culture:2,Nature:5,Nightlife:1,Budget:3}},
+  {city:'Bled',country:'Slovenia',size:'Village',scores:{Lodging:2,Dining:2,Culture:2,Nature:5,Nightlife:1,Budget:4}},
+  {city:'Salzburg',country:'Austria',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:5,Nightlife:2,Budget:3}},
+  {city:'Split',country:'Croatia',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:3,Budget:4}},
+  {city:'Bern',country:'Switzerland',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:5,Nightlife:2,Budget:2}},
+  {city:'Kotor',country:'Montenegro',size:'Village',scores:{Lodging:2,Dining:2,Culture:3,Nature:5,Nightlife:1,Budget:5}},
+  {city:'Berlin',country:'Germany',size:'Large City',scores:{Lodging:4,Dining:4,Culture:5,Nature:3,Nightlife:5,Budget:4}},
+  {city:'Madrid',country:'Spain',size:'Large City',scores:{Lodging:4,Dining:5,Culture:5,Nature:2,Nightlife:5,Budget:3}},
+  {city:'Zurich',country:'Switzerland',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:4,Nightlife:3,Budget:1}},
+  {city:'Geneva',country:'Switzerland',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:3,Nature:4,Nightlife:2,Budget:1}},
+  {city:'Brussels',country:'Belgium',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:2,Nightlife:3,Budget:3}},
+  {city:'Stockholm',country:'Sweden',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:4,Nightlife:3,Budget:2}},
+  {city:'Oslo',country:'Norway',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:5,Nightlife:3,Budget:1}},
+  {city:'Helsinki',country:'Finland',size:'Large City',scores:{Lodging:3,Dining:3,Culture:4,Nature:4,Nightlife:3,Budget:2}},
+  {city:'Warsaw',country:'Poland',size:'Large City',scores:{Lodging:4,Dining:3,Culture:4,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Riga',country:'Latvia',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Vilnius',country:'Lithuania',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Bratislava',country:'Slovakia',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:3,Nature:3,Nightlife:3,Budget:5}},
+  {city:'Sarajevo',country:'Bosnia',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:3,Nightlife:3,Budget:5}},
+  {city:'Sofia',country:'Bulgaria',size:'Large City',scores:{Lodging:3,Dining:3,Culture:3,Nature:3,Nightlife:4,Budget:5}},
+  {city:'Bucharest',country:'Romania',size:'Large City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Belgrade',country:'Serbia',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:2,Nightlife:5,Budget:5}},
+  {city:'Thessaloniki',country:'Greece',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:2,Nightlife:4,Budget:4}},
+  {city:'Palermo',country:'Italy',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:3,Nightlife:3,Budget:4}},
+  {city:'Naples',country:'Italy',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:4,Nightlife:3,Budget:4}},
+  {city:'Bologna',country:'Italy',size:'Medium City',scores:{Lodging:3,Dining:5,Culture:4,Nature:2,Nightlife:3,Budget:4}},
+  {city:'Turin',country:'Italy',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Verona',country:'Italy',size:'Small City',scores:{Lodging:3,Dining:4,Culture:4,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Amalfi',country:'Italy',size:'Village',scores:{Lodging:3,Dining:4,Culture:2,Nature:5,Nightlife:1,Budget:2}},
+  {city:'Positano',country:'Italy',size:'Village',scores:{Lodging:2,Dining:3,Culture:2,Nature:5,Nightlife:1,Budget:2}},
+  {city:'Mykonos',country:'Greece',size:'Village',scores:{Lodging:3,Dining:3,Culture:2,Nature:5,Nightlife:5,Budget:2}},
+  {city:'Rhodes',country:'Greece',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Heraklion',country:'Greece (Crete)',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:4,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Corfu',country:'Greece',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:2,Budget:3}},
+  {city:'Bilbao',country:'Spain',size:'Medium City',scores:{Lodging:3,Dining:5,Culture:4,Nature:3,Nightlife:3,Budget:4}},
+  {city:'San Sebastián',country:'Spain',size:'Small City',scores:{Lodging:3,Dining:5,Culture:3,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Granada',country:'Spain',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:5,Nature:3,Nightlife:4,Budget:4}},
+  {city:'Córdoba',country:'Spain',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:5,Nature:2,Nightlife:3,Budget:4}},
+  {city:'Málaga',country:'Spain',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:4,Nightlife:4,Budget:3}},
+  {city:'Palma',country:'Spain (Mallorca)',size:'Large City',scores:{Lodging:4,Dining:4,Culture:3,Nature:5,Nightlife:4,Budget:3}},
+  {city:'Ibiza Town',country:'Spain',size:'Small City',scores:{Lodging:3,Dining:4,Culture:2,Nature:5,Nightlife:5,Budget:2}},
+  {city:'Interlaken',country:'Switzerland',size:'Small City',scores:{Lodging:3,Dining:3,Culture:2,Nature:5,Nightlife:2,Budget:2}},
+  {city:'Lucerne',country:'Switzerland',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:5,Nightlife:2,Budget:2}},
+  {city:'Innsbruck',country:'Austria',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:2,Budget:3}},
+  {city:'Hallstatt',country:'Austria',size:'Village',scores:{Lodging:2,Dining:2,Culture:3,Nature:5,Nightlife:1,Budget:3}},
+  {city:'Antwerp',country:'Belgium',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:2,Nightlife:4,Budget:3}},
+  {city:'Lyon',country:'France',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:3,Nightlife:3,Budget:3}},
+  {city:'Nice',country:'France',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:5,Nightlife:3,Budget:2}},
+  {city:'Marseille',country:'France',size:'Large City',scores:{Lodging:3,Dining:4,Culture:3,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Bordeaux',country:'France',size:'Large City',scores:{Lodging:3,Dining:5,Culture:4,Nature:3,Nightlife:3,Budget:3}},
+  {city:'Strasbourg',country:'France',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:4,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Annecy',country:'France',size:'Small City',scores:{Lodging:3,Dining:4,Culture:3,Nature:5,Nightlife:2,Budget:3}},
+  {city:'Colmar',country:'France',size:'Small City',scores:{Lodging:3,Dining:4,Culture:4,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Munich',country:'Germany',size:'Large City',scores:{Lodging:4,Dining:4,Culture:5,Nature:3,Nightlife:4,Budget:3}},
+  {city:'Hamburg',country:'Germany',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:3,Nightlife:5,Budget:3}},
+  {city:'Cologne',country:'Germany',size:'Large City',scores:{Lodging:3,Dining:3,Culture:4,Nature:2,Nightlife:4,Budget:3}},
+  {city:'Frankfurt',country:'Germany',size:'Large City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:3,Budget:3}},
+  {city:'Heidelberg',country:'Germany',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:4,Nightlife:3,Budget:3}},
+  {city:'Rothenburg',country:'Germany',size:'Village',scores:{Lodging:2,Dining:2,Culture:4,Nature:2,Nightlife:1,Budget:3}},
+  {city:'Cardiff',country:'Wales',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:4,Nightlife:3,Budget:4}},
+  {city:'Bath',country:'England',size:'Small City',scores:{Lodging:3,Dining:3,Culture:5,Nature:3,Nightlife:2,Budget:3}},
+  {city:'York',country:'England',size:'Small City',scores:{Lodging:3,Dining:3,Culture:5,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Dublin',country:'Ireland',size:'Large City',scores:{Lodging:4,Dining:3,Culture:4,Nature:3,Nightlife:5,Budget:3}},
+  {city:'Galway',country:'Ireland',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:5,Nightlife:4,Budget:3}},
+  {city:'Gdansk',country:'Poland',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:3,Nightlife:3,Budget:5}},
+  {city:'Wroclaw',country:'Poland',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:2,Nightlife:4,Budget:5}},
+  {city:'Ohrid',country:'North Macedonia',size:'Small City',scores:{Lodging:2,Dining:3,Culture:4,Nature:5,Nightlife:2,Budget:5}},
+  {city:'Tirana',country:'Albania',size:'Large City',scores:{Lodging:3,Dining:3,Culture:3,Nature:3,Nightlife:4,Budget:5}},
+  {city:'Shkodër',country:'Albania',size:'Small City',scores:{Lodging:2,Dining:2,Culture:3,Nature:5,Nightlife:1,Budget:5}},
+  {city:'Plovdiv',country:'Bulgaria',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:4,Nature:3,Nightlife:3,Budget:5}},
+  {city:'Tbilisi',country:'Georgia',size:'Large City',scores:{Lodging:3,Dining:4,Culture:4,Nature:4,Nightlife:4,Budget:5}},
+  {city:'Nicosia',country:'Cyprus',size:'Medium City',scores:{Lodging:3,Dining:3,Culture:3,Nature:3,Nightlife:2,Budget:3}},
+  {city:'Paphos',country:'Cyprus',size:'Small City',scores:{Lodging:3,Dining:3,Culture:3,Nature:4,Nightlife:2,Budget:3}},
+  {city:'Funchal',country:'Portugal (Madeira)',size:'Medium City',scores:{Lodging:3,Dining:4,Culture:3,Nature:5,Nightlife:2,Budget:4}},
+  {city:'Pula',country:'Croatia',size:'Small City',scores:{Lodging:3,Dining:3,Culture:4,Nature:4,Nightlife:2,Budget:4}},
+  {city:'Hvar',country:'Croatia',size:'Village',scores:{Lodging:3,Dining:3,Culture:2,Nature:5,Nightlife:4,Budget:3}},
+  {city:'Mostar',country:'Bosnia',size:'Small City',scores:{Lodging:2,Dining:3,Culture:4,Nature:4,Nightlife:2,Budget:5}},
+  {city:'Skopje',country:'North Macedonia',size:'Large City',scores:{Lodging:3,Dining:3,Culture:3,Nature:2,Nightlife:3,Budget:5}},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   APP STATE  (UI-only — persistent data comes from Supabase)
+═══════════════════════════════════════════════════════════════ */
+const State = {
+  user:         null,
+  destinations: [],
+  tripConfig:   {},
+  logistics:    [],
+  prefs:        [],
+  votes:        {},
+  itinerary:    {},   /* { dayIndex: rowData } */
+  photos:       {},   /* { dayIndex: [{ id, url, path, name }] } */
+  itiView:      'overview',
+  itiDayIdx:    0,
+  photoDayIdx:  0,
+  voteComments: [],   /* [{ name, text }] populated by DB.loadVotes */
+  availability: [],   /* [{ user_id, display_name, dates: ['YYYY-MM-DD', …] }] */
+  _subs:        [],   /* Active Supabase real-time subscriptions */
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+
+/* Parse an ISO date string (YYYY-MM-DD) pinned to CET/CEST (Europe/Paris).
+   Using new Date('YYYY-MM-DD') gives UTC midnight which shifts the displayed
+   day for users in non-UTC timezones. We use noon UTC instead — always lands
+   on the correct calendar date in CET (UTC+1) and CEST (UTC+2) — then
+   extract the date parts in the Europe/Paris timezone. */
+function parseLocalDate(str) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date(str + 'T12:00:00Z'));
+  const p = {};
+  parts.forEach(({ type, value }) => { p[type] = value; });
+  return new Date(parseInt(p.year), parseInt(p.month) - 1, parseInt(p.day));
+}
+function getDays(start, end) {
+  const days = [], d = parseLocalDate(start), e = parseLocalDate(end);
+  while (d <= e) { days.push(new Date(d)); d.setDate(d.getDate() + 1); }
+  return days;
+}
+/* Format a JS Date as 'YYYY-MM-DD' in CET — inverse of parseLocalDate */
+function formatCET(date) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(date);
+}
+function fmtDate(d)  { return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS_S[d.getMonth()]}`; }
+function avgScore(d) { return Object.values(d.scores).reduce((a,b) => a+b, 0) / DIMS.length; }
+function slotKey(s)  { return s.toLowerCase(); }
+
+function colorForUser(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h);
+  return AVATARS[Math.abs(h) % AVATARS.length];
+}
+
+function initDayData(idx) {
+  if (!State.itinerary[idx]) {
+    State.itinerary[idx] = {
+      hotel:'', hotel_by:'', hotel_confirmed:false,
+      lunch:'', lunch_by:'', lunch_confirmed:false,
+      dinner:'', dinner_by:'', dinner_confirmed:false,
+      blocks: ['','','','','']
+    };
+  }
+  return State.itinerary[idx];
+}
+
+function dayCompletionPct(data) {
+  const total  = FIXED_SLOTS.length + TIME_BLOCKS.length;
+  const filled = FIXED_SLOTS.filter(s => data[slotKey(s)]).length
+               + (data.blocks || []).filter(b => b).length;
+  return Math.round(filled / total * 100);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════ */
+const Toast = {
+  show(msg, type = 'info', duration = 3000) {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    $('toast-container').appendChild(t);
+    requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, duration);
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   DB  — all Supabase operations
+   — Every table interaction goes through here.
+   — Real-time subscriptions use Supabase channels.
+═══════════════════════════════════════════════════════════════ */
+const DB = {
+
+  /* ── Trip Config ────────────────────────────────────── */
+  async saveTripConfig(cfg) {
+    const { error } = await sb.from('trip_config').upsert({
+      id: TRIP_ID, dest: cfg.dest, country: cfg.country,
+      start_date: cfg.start, end_date: cfg.end,
+      window_start: cfg.windowStart, window_end: cfg.windowEnd,
+      trip_duration: cfg.tripDuration || null,
+      updated_at: new Date()
+    });
+    if (error) throw error;
+  },
+
+  async loadTripConfig() {
+    const { data } = await sb.from('trip_config').select('*').eq('id', TRIP_ID).single();
+    return data ? {
+      dest: data.dest, country: data.country, start: data.start_date, end: data.end_date,
+      windowStart: data.window_start || '', windowEnd: data.window_end || '',
+      tripDuration: data.trip_duration || 5
+    } : {};
+  },
+
+  subTripConfig(cb) {
+    return sb.channel('trip_config').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'trip_config', filter: `id=eq.${TRIP_ID}` },
+      payload => cb(payload.new)
+    ).subscribe();
+  },
+
+  /* ── Logistics ──────────────────────────────────────── */
+  async saveLogistics(rows) {
+    /* Delete all then re-insert — keeps it simple for small groups */
+    await sb.from('logistics').delete().eq('trip_id', TRIP_ID);
+    if (rows.length) {
+      const { error } = await sb.from('logistics').insert(
+        rows.map(r => ({ ...r, trip_id: TRIP_ID, user_id: State.user?.id }))
+      );
+      if (error) throw error;
+    }
+  },
+
+  async loadLogistics() {
+    const { data } = await sb.from('logistics').select('*').eq('trip_id', TRIP_ID);
+    return data || [];
+  },
+
+  subLogistics(cb) {
+    return sb.channel('logistics').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'logistics' },
+      async () => { const rows = await this.loadLogistics(); cb(rows); }
+    ).subscribe();
+  },
+
+  /* ── Preferences ────────────────────────────────────── */
+  async savePrefs(rows) {
+    await sb.from('preferences').delete().eq('trip_id', TRIP_ID);
+    if (rows.length) {
+      const { error } = await sb.from('preferences').insert(
+        rows.map(r => ({ ...r, trip_id: TRIP_ID, user_id: State.user?.id }))
+      );
+      if (error) throw error;
+    }
+  },
+
+  async loadPrefs() {
+    const { data } = await sb.from('preferences').select('*').eq('trip_id', TRIP_ID);
+    return data || [];
+  },
+
+  subPrefs(cb) {
+    return sb.channel('preferences').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'preferences' },
+      async () => { const rows = await this.loadPrefs(); cb(rows); }
+    ).subscribe();
+  },
+
+  /* ── Votes ──────────────────────────────────────────── */
+  async saveVote(cities, comment) {
+    const { error } = await sb.from('votes').upsert({
+      trip_id: TRIP_ID, user_id: State.user.id,
+      display_name: Auth.displayName(State.user),
+      cities, comment: comment || null, voted_at: new Date()
+    }, { onConflict: 'user_id' });
+    if (error) throw error;
+  },
+
+  async loadVotes() {
+    const { data } = await sb.from('votes').select('cities, comment, display_name').eq('trip_id', TRIP_ID);
+    const tally = {};
+    const comments = [];
+    (data || []).forEach(row => {
+      (row.cities || []).forEach(c => { tally[c] = (tally[c] || 0) + 1; });
+      if (row.comment) comments.push({ name: row.display_name || 'Traveler', text: row.comment });
+    });
+    State.voteComments = comments;
+    return tally;
+  },
+
+  subVotes(cb) {
+    return sb.channel('votes').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'votes' },
+      async () => { const tally = await this.loadVotes(); cb(tally); }
+    ).subscribe();
+  },
+
+  /* ── AVAILABILITY ─────────────────────────────────────────
+     Requires Supabase table:
+       CREATE TABLE availability (
+         id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+         trip_id text NOT NULL,
+         user_id uuid REFERENCES auth.users(id),
+         display_name text,
+         dates jsonb DEFAULT '[]',
+         updated_at timestamptz DEFAULT now()
+       );
+       CREATE UNIQUE INDEX ON availability (trip_id, user_id);
+     Also add column to trip_config:
+       ALTER TABLE trip_config ADD COLUMN trip_duration integer;
+  ─────────────────────────────────────────────────────────── */
+  async saveAvailability(dates) {
+    const { error } = await sb.from('availability').upsert({
+      trip_id: TRIP_ID, user_id: State.user.id,
+      display_name: Auth.displayName(State.user),
+      dates, updated_at: new Date()
+    }, { onConflict: 'trip_id,user_id' });
+    if (error) throw error;
+  },
+
+  async loadAvailability() {
+    const { data } = await sb.from('availability').select('user_id, display_name, dates').eq('trip_id', TRIP_ID);
+    return data || [];
+  },
+
+  subAvailability(cb) {
+    return sb.channel('availability').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'availability' },
+      async () => { const rows = await this.loadAvailability(); cb(rows); }
+    ).subscribe();
+  },
+
+  /* ── Itinerary ──────────────────────────────────────── */
+  async saveItineraryDay(dayIdx, data) {
+    const { error } = await sb.from('itinerary').upsert({
+      trip_id: TRIP_ID, day_index: dayIdx,
+      hotel: data.hotel, hotel_by: data.hotel_by, hotel_confirmed: data.hotel_confirmed,
+      lunch: data.lunch, lunch_by: data.lunch_by, lunch_confirmed: data.lunch_confirmed,
+      dinner: data.dinner, dinner_by: data.dinner_by, dinner_confirmed: data.dinner_confirmed,
+      blocks: data.blocks, updated_at: new Date()
+    }, { onConflict: 'trip_id,day_index' });
+    if (error) throw error;
+  },
+
+  async loadItinerary() {
+    const { data } = await sb.from('itinerary').select('*').eq('trip_id', TRIP_ID);
+    const iti = {};
+    (data || []).forEach(row => {
+      iti[row.day_index] = {
+        hotel: row.hotel || '', hotel_by: row.hotel_by || '', hotel_confirmed: row.hotel_confirmed || false,
+        lunch: row.lunch || '', lunch_by: row.lunch_by || '', lunch_confirmed: row.lunch_confirmed || false,
+        dinner: row.dinner || '', dinner_by: row.dinner_by || '', dinner_confirmed: row.dinner_confirmed || false,
+        blocks: row.blocks || ['','','','','']
+      };
+    });
+    return iti;
+  },
+
+  subItinerary(cb) {
+    return sb.channel('itinerary').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'itinerary' },
+      async () => { const iti = await this.loadItinerary(); cb(iti); }
+    ).subscribe();
+  },
+
+  /* ── Chat ───────────────────────────────────────────── */
+  async sendMessage(text) {
+    const { error } = await sb.from('chat_messages').insert({
+      trip_id: TRIP_ID, user_id: State.user.id,
+      display_name: Auth.displayName(State.user),
+      text, sent_at: new Date()
+    });
+    if (error) throw error;
+  },
+
+  async loadChat() {
+    const { data } = await sb.from('chat_messages').select('*')
+      .eq('trip_id', TRIP_ID).order('sent_at', { ascending: true });
+    return data || [];
+  },
+
+  subChat(cb) {
+    return sb.channel('chat').on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      async () => { const msgs = await this.loadChat(); cb(msgs); }
+    ).subscribe();
+  },
+
+  /* ── Photos ─────────────────────────────────────────── */
+  async uploadPhoto(dayIdx, file) {
+    const path = `${TRIP_ID}/day${dayIdx}/${State.user.id}_${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from('trip-photos').upload(path, file);
+    if (upErr) throw upErr;
+    const { data: urlData } = sb.storage.from('trip-photos').getPublicUrl(path);
+    const { error: dbErr } = await sb.from('photos').insert({
+      trip_id: TRIP_ID, day_index: dayIdx, user_id: State.user.id,
+      display_name: Auth.displayName(State.user),
+      storage_path: path, url: urlData.publicUrl, uploaded_at: new Date()
+    });
+    if (dbErr) throw dbErr;
+    return urlData.publicUrl;
+  },
+
+  async deletePhoto(id, storagePath) {
+    await sb.from('photos').delete().eq('id', id);
+    await sb.storage.from('trip-photos').remove([storagePath]);
+  },
+
+  async loadPhotos() {
+    const { data } = await sb.from('photos').select('*')
+      .eq('trip_id', TRIP_ID).order('uploaded_at', { ascending: true });
+    const photos = {};
+    (data || []).forEach(row => {
+      if (!photos[row.day_index]) photos[row.day_index] = [];
+      photos[row.day_index].push({ id: row.id, url: row.url, path: row.storage_path, name: row.display_name });
+    });
+    return photos;
+  },
+
+  subPhotos(cb) {
+    return sb.channel('photos').on('postgres_changes',
+      { event: '*', schema: 'public', table: 'photos' },
+      async () => { const p = await this.loadPhotos(); cb(p); }
+    ).subscribe();
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH  — Magic link (passwordless email) via Supabase
+   Flow:
+     1. User enters email → sendMagicLink() sends OTP via Supabase
+     2. User clicks email link → lands back on the app, auto signed-in
+     3. onAuthStateChange fires → check for display_name in user_metadata
+     4a. Name exists → updateUserUI + App.boot()
+     4b. No name yet → show name prompt overlay first
+     5. User enters name → saveName() → stores to Supabase user_metadata
+        → closes prompt → App.boot()
+═══════════════════════════════════════════════════════════════ */
+const Auth = {
+
+  async sendMagicLink() {
+    const email = $('login-email').value.trim();
+    if (!email || !email.includes('@')) {
+      $('login-error').textContent = 'Please enter a valid email address.';
+      return;
+    }
+    $('login-error').textContent = '';
+
+    /* IMPORTANT: replace with your deployed Netlify URL before sharing */
+    const redirectTo = window.location.origin + window.location.pathname;
+
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: redirectTo }
+    });
+
+    if (error) {
+      $('login-error').textContent = 'Could not send email. Please try again.';
+      console.error(error);
+      return;
+    }
+
+    $('login-email-display').textContent = email;
+    $('login-email-form').style.display  = 'none';
+    $('login-link-sent').style.display   = 'block';
+  },
+
+  resetLoginForm() {
+    $('login-email-form').style.display = 'block';
+    $('login-link-sent').style.display  = 'none';
+    $('login-email').value = '';
+    $('login-error').textContent = '';
+  },
+
+  /* Called when user submits the name prompt on first sign-in */
+  async saveName() {
+    const name = $('name-input').value.trim();
+    if (!name) {
+      $('name-error').textContent = 'Please enter a name to continue.';
+      return;
+    }
+    $('name-error').textContent = '';
+
+    try {
+      /* Store name in Supabase auth user metadata — no extra table needed */
+      const { error } = await sb.auth.updateUser({
+        data: { display_name: name }
+      });
+      if (error) throw error;
+
+      /* Update local user object so the rest of the app sees the name immediately */
+      State.user.user_metadata = { ...State.user.user_metadata, display_name: name };
+
+      /* Close prompt, update header, boot app */
+      $('name-prompt').classList.remove('open');
+      this.updateUserUI(State.user);
+      await App.boot();
+    } catch(e) {
+      $('name-error').textContent = 'Could not save name. Please try again.';
+      console.error(e);
+    }
+  },
+
+  async signOut() {
+    await sb.auth.signOut();
+  },
+
+  /* Returns the best available display name for a user */
+  displayName(user) {
+    return user?.user_metadata?.display_name
+        || user?.email?.split('@')[0]
+        || 'Traveler';
+  },
+
+  updateUserUI(user) {
+    const name = this.displayName(user);
+    $('user-name').textContent        = name;
+    $('user-av').textContent          = name[0].toUpperCase();
+    $('user-av').style.background     = colorForUser(user.id);
+  },
+
+  init() {
+    /* Fires on every page load and whenever auth state changes */
+    sb.auth.onAuthStateChange(async (event, session) => {
+      $('app-loading').style.display = 'none';
+
+      if (session?.user) {
+        State.user = session.user;
+        $('login-screen').style.display = 'none';
+        $('main-app').style.display     = 'block';
+
+        const hasName = !!session.user.user_metadata?.display_name;
+
+        if (!hasName) {
+          /* First sign-in: show name prompt before booting the app */
+          $('name-prompt').classList.add('open');
+          /* Pre-fill with email prefix as a suggestion */
+          const suggestion = session.user.email?.split('@')[0] || '';
+          $('name-input').value = suggestion;
+          $('name-input').select();
+        } else {
+          /* Returning user: go straight in */
+          this.updateUserUI(session.user);
+          await App.boot();
+        }
+      } else {
+        State.user = null;
+        $('login-screen').style.display = 'flex';
+        $('main-app').style.display     = 'none';
+        $('name-prompt').classList.remove('open');
+        App.teardown();
+      }
+    });
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   APP  — page switching, boot sequence, teardown
+═══════════════════════════════════════════════════════════════ */
+const App = {
+  switchPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab, .bottom-nav-btn').forEach(t => t.classList.remove('active'));
+    $('page-' + page).classList.add('active');
+    document.querySelectorAll(`[data-page="${page}"]`).forEach(t => t.classList.add('active'));
+    if (page === 'itinerary') Itinerary.refresh();
+    if (page === 'photos')    Photos.render();
+    if (page === 'chat')      Chat.load();
+  },
+
+  async boot() {
+    /* Load all data once, then subscribe to real-time changes */
+    try {
+      const [cfg, logistics, prefs, votes, iti, photos, avail] = await Promise.all([
+        DB.loadTripConfig(), DB.loadLogistics(), DB.loadPrefs(),
+        DB.loadVotes(), DB.loadItinerary(), DB.loadPhotos(),
+        DB.loadAvailability()
+      ]);
+      State.tripConfig   = cfg;
+      State.logistics    = logistics;
+      State.prefs        = prefs;
+      State.votes        = votes;
+      State.itinerary    = iti;
+      State.photos       = photos;
+      State.availability = avail;
+      if (cfg.dest) Itinerary.seedDays();
+    } catch(e) {
+      Toast.show('Could not load trip data', 'error');
+      console.error(e);
+    }
+
+    /* Real-time subscriptions */
+    State._subs = [
+      DB.subTripConfig(cfg => {
+        State.tripConfig = {
+          dest: cfg.dest, country: cfg.country, start: cfg.start_date, end: cfg.end_date,
+          windowStart: cfg.window_start || '', windowEnd: cfg.window_end || '',
+          tripDuration: cfg.trip_duration || 5
+        };
+        if (cfg.dest) Itinerary.seedDays();
+        Toast.show(`Trip updated: ${cfg.dest}`, 'info');
+      }),
+      DB.subLogistics(rows => { State.logistics = rows; }),
+      DB.subPrefs(rows     => { State.prefs = rows; }),
+      DB.subVotes(tally    => { State.votes = tally; }),
+      DB.subItinerary(iti  => { State.itinerary = iti; Itinerary.refresh(); }),
+      DB.subPhotos(photos  => { State.photos = photos; Photos.renderGrid(); }),
+      DB.subChat(msgs      => { Chat.render(msgs); }),
+      DB.subAvailability(rows => {
+        State.availability = rows;
+        /* Refresh calendar if Step 1 is visible */
+        if (State.currentStep === 0) {
+          const cal = document.getElementById('avail-calendar');
+          if (cal) cal.innerHTML = Planning.renderCalendar();
+        }
+      }),
+    ];
+
+    /* Init UI modules */
+    Destinations.init();
+    Planning.init();
+  },
+
+  teardown() {
+    State._subs.forEach(sub => sb.removeChannel(sub));
+    State._subs = [];
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   DESTINATIONS
+═══════════════════════════════════════════════════════════════ */
+const Destinations = {
+  init() {
+    const seen = new Set();
+    State.destinations = RAW_DESTINATIONS.filter(d => {
+      const key = d.city + '|' + d.country;
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+    this.render(State.destinations);
+  },
+
+  filter() {
+    const q    = $('dest-search').value.toLowerCase();
+    const sz   = $('dest-size').value;
+    const bg   = $('dest-budget').value;
+    const sort = $('dest-sort').value;
+    let list   = State.destinations.filter(d => {
+      if (q  && !d.city.toLowerCase().includes(q) && !d.country.toLowerCase().includes(q)) return false;
+      if (sz && d.size !== sz) return false;
+      if (bg && d.scores.Budget !== parseInt(bg)) return false;
+      return true;
+    });
+    const sortFns = {
+      alpha:  (a,b) => a.city.localeCompare(b.city),
+      score:  (a,b) => avgScore(b) - avgScore(a),
+      budget: (a,b) => b.scores.Budget - a.scores.Budget,
+      nature: (a,b) => b.scores.Nature - a.scores.Nature,
+      dining: (a,b) => b.scores.Dining - a.scores.Dining
+    };
+    list.sort(sortFns[sort] || sortFns.alpha);
+    this.render(list);
+  },
+
+  render(list) {
+    $('dest-grid').innerHTML = list.map(d => {
+      const idx  = State.destinations.indexOf(d);
+      const bars = DIMS.map(k =>
+        `<div class="mini-bar-row">
+           <span class="mini-bar-lbl">${k}</span>
+           <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${d.scores[k]/5*100}%"></div></div>
+         </div>`
+      ).join('');
+      const col = SIZE_COLORS[d.size] || '#888';
+      return `<div class="dest-card" onclick="Destinations.openModal(${idx})">
+        <div class="size-badge"><span class="tag" style="background:${col}22;color:${col};font-size:9px;">${d.size}</span></div>
+        <div class="dest-city">${d.city}</div>
+        <div class="dest-country">${d.country}</div>
+        <div class="mini-bars">${bars}</div>
+      </div>`;
+    }).join('');
+  },
+
+  openModal(idx) {
+    const d   = State.destinations[idx];
+    const avg = avgScore(d).toFixed(1);
+    $('modal-city').textContent    = d.city;
+    $('modal-country').textContent = `${d.country} · ${d.size}`;
+    $('modal-body').innerHTML = `
+      <div class="flex-between mb-12">
+        <span class="t-muted" style="font-size:13px;">Composite score</span>
+        <span class="t-display t-brand" style="font-size:22px;">${avg}<span class="t-muted" style="font-size:12px;">/5</span></span>
+      </div>
+      ${DIMS.map(k => `
+        <div class="rating-row">
+          <div>
+            <div style="font-size:13px;font-weight:500;">${k}</div>
+            <div class="t-muted t-small">${RATING_TEXTS[k][d.scores[k]] || ''}</div>
+          </div>
+          <div class="flex-center gap-6">
+            <div class="rating-bar"><div class="rating-fill" style="width:${d.scores[k]/5*100}%"></div></div>
+            <div class="rating-num">${d.scores[k]}</div>
+          </div>
+        </div>`).join('')}
+      <div class="mt-12"><button class="btn btn-sm" onclick="Destinations.closeModal()">Close</button></div>`;
+    $('dest-modal').classList.add('open');
+    $('dest-modal').scrollIntoView({ behavior:'smooth', block:'start' });
+  },
+
+  closeModal() { $('dest-modal').classList.remove('open'); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PLANNING
+   Adding a new step: add one object to STEPS array only.
+═══════════════════════════════════════════════════════════════ */
+const STEPS = [
+  { label:'Dates',       render:() => Planning.renderDates(),     onEnter:()=>{} },
+  { label:'Logistics',   render:() => Planning.renderLogistics(), onEnter:()=>{} },
+  { label:'Preferences', render:() => Planning.renderPrefs(),     onEnter:()=>{} },
+  { label:'Dashboard',   render:() => Planning.renderDashboard(), onEnter:()=>{} },
+  { label:'Vote',        render:() => Planning.renderVote(),      onEnter:()=>{ State._myVotes = []; } },
+  { label:'Results',     render:() => Planning.renderResults(),   onEnter:()=>{} },
+  { label:'Confirm',     render:() => Planning.renderConfirm(),   onEnter:()=>{ const el=$('final-dest'); if(el) el.value=Planning.getTopDest(); } },
+];
+
+const Planning = {
+  init() {
+    $('step-nav').innerHTML = STEPS.map((s,i) =>
+      `<button class="step-tab" id="stab-${i+1}" onclick="Planning.gotoStep(${i+1})">
+         <span class="step-num">${i+1}</span>${s.label}
+       </button>`
+    ).join('');
+    this.gotoStep(1);
+  },
+
+  gotoStep(n) {
+    State.currentStep = n;
+    STEPS.forEach((_,i) => {
+      const t = $(`stab-${i+1}`);
+      t.classList.remove('active','done');
+      if (i+1 < n) t.classList.add('done');
+      else if (i+1 === n) t.classList.add('active');
+    });
+    $('step-body').innerHTML = STEPS[n-1].render();
+    STEPS[n-1].onEnter();
+  },
+
+  next() { this.gotoStep(State.currentStep + 1); },
+
+  /* ── STEP 1: DATES ──────────────────────────────────── */
+  renderDates() {
+    const ws  = State.tripConfig.windowStart || '';
+    const we  = State.tripConfig.windowEnd   || '';
+    const dur = State.tripConfig.tripDuration || 5;
+    return `
+      <div class="cal-instruction">
+        <strong>How to agree on trip dates</strong><br>
+        1. The <em>organiser</em> sets a search window (up to ~3 months) and the agreed trip duration in nights below.<br>
+        2. Every participant marks the calendar days they are available — arrival <em>and</em> departure dates included. Click a day to toggle it.<br>
+        3. Hit <strong>Find Best Windows</strong> to discover which periods have the most people free for the full duration.
+      </div>
+
+      <div class="section-title">Organiser Settings</div>
+      <div class="grid-2 mb-8">
+        <div class="field-row">
+          <label class="field-label">Search window — arrival from</label>
+          <input class="field-input" type="date" id="win-start" value="${ws}" onchange="Planning.saveWindowConfig()">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Search window — departure by</label>
+          <input class="field-input" type="date" id="win-end" value="${we}" onchange="Planning.saveWindowConfig()">
+        </div>
+      </div>
+      <div class="field-row mb-16">
+        <label class="field-label">Trip duration (nights)</label>
+        <div class="cal-dur-btns">
+          ${[3,4,5,6,7,10,14].map(n => `<button class="dur-btn ${dur===n?'active':''}" onclick="Planning.setDuration(${n})">${n} nights</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Mark Your Availability</div>
+      <p class="t-muted" style="font-size:12px;margin-bottom:12px;">
+        Click any day you can travel. Your dates appear in
+        <span style="color:var(--brand);font-weight:600;">red</span>.
+        Green shading shows how many others are free on that day.
+        The number in the corner counts all participants available.
+      </p>
+      <div id="avail-calendar">${this.renderCalendar()}</div>
+      <div class="cal-legend">
+        <span><span class="cal-legend-swatch" style="background:var(--brand);"></span>Your dates</span>
+        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.18);"></span>1 person free</span>
+        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.75);"></span>Everyone free</span>
+      </div>
+
+      <div class="flex gap-8 mt-16">
+        <button class="btn btn-brand" onclick="Planning.findBestDates()">Find Best Windows</button>
+        <button class="btn" onclick="Planning.next()">Next →</button>
+      </div>
+      <div id="best-dates" class="mt-16"></div>`;
+  },
+
+  renderCalendar() {
+    const ws = $('win-start')?.value || State.tripConfig.windowStart || '';
+    const we = $('win-end')?.value   || State.tripConfig.windowEnd   || '';
+    if (!ws || !we) return '<p class="t-muted t-small mt-8">Set the search window above to show the calendar.</p>';
+
+    const startDate = parseLocalDate(ws);
+    const endDate   = parseLocalDate(we);
+    if (endDate < startDate) return '<p class="t-muted t-small mt-8">End date must be after start date.</p>';
+
+    /* Current user's dates */
+    const myRec   = State.availability.find(r => r.user_id === State.user?.id);
+    const myDates = new Set(myRec?.dates || []);
+
+    /* Heat map: dateStr → count */
+    const avMap = {};
+    State.availability.forEach(row => {
+      (row.dates || []).forEach(d => { avMap[d] = (avMap[d] || 0) + 1; });
+    });
+    const maxUsers = Math.max(State.availability.length, 1);
+
+    /* Enumerate months */
+    const months = [];
+    let cur = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    while (cur <= endMonth) {
+      months.push(new Date(cur));
+      cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
+
+    const MNAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DHDRS  = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+
+    const html = months.map(ms => {
+      const y = ms.getFullYear(), m = ms.getMonth();
+      const lastDay  = new Date(y, m + 1, 0).getDate();
+      const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; /* Mon=0 */
+
+      let cells = DHDRS.map(h => `<div class="cal-hdr">${h}</div>`).join('');
+      for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+
+      for (let day = 1; day <= lastDay; day++) {
+        const d    = new Date(y, m, day);
+        const dStr = formatCET(d);
+        const inW  = d >= startDate && d <= endDate;
+        const mine = myDates.has(dStr);
+        const cnt  = avMap[dStr] || 0;
+        const heat = inW && cnt ? Math.ceil((cnt / maxUsers) * 4) : 0;
+
+        let cls = 'cal-day';
+        if (!inW) { cls += ' cal-out'; }
+        else {
+          cls += ' in-window';
+          if (mine) cls += ' cal-mine';
+          else if (heat) cls += ` cal-heat${heat}`;
+        }
+
+        const tip   = inW && cnt ? `${cnt} participant${cnt>1?'s':''} available` : '';
+        const click = inW ? `onclick="Planning.toggleDate('${dStr}')"` : '';
+        const badge = inW && cnt && !mine ? `<span class="cal-cnt">${cnt}</span>` : '';
+
+        cells += `<div class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</div>`;
+      }
+
+      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><div class="cal-grid">${cells}</div></div>`;
+    }).join('');
+
+    return `<div class="cal-months">${html}</div>`;
+  },
+
+  async toggleDate(dStr) {
+    if (!State.user) { Toast.show('Sign in to mark your availability', 'error'); return; }
+    let myRec = State.availability.find(r => r.user_id === State.user.id);
+    let dates  = [...(myRec?.dates || [])];
+    const idx  = dates.indexOf(dStr);
+    if (idx > -1) dates.splice(idx, 1); else dates.push(dStr);
+
+    /* Optimistic local update */
+    if (myRec) { myRec.dates = dates; }
+    else {
+      State.availability.push({ user_id: State.user.id, display_name: Auth.displayName(State.user), dates });
+    }
+    const cal = document.getElementById('avail-calendar');
+    if (cal) cal.innerHTML = this.renderCalendar();
+
+    clearTimeout(this._calTimer);
+    this._calTimer = setTimeout(async () => {
+      try { await DB.saveAvailability(dates); }
+      catch(e) { Toast.show('Could not save availability', 'error'); console.error(e); }
+    }, 600);
+  },
+
+  async saveWindowConfig() {
+    const ws  = $('win-start')?.value;
+    const we  = $('win-end')?.value;
+    if (!ws || !we) return;
+    State.tripConfig.windowStart = ws;
+    State.tripConfig.windowEnd   = we;
+    try {
+      await DB.saveTripConfig(State.tripConfig);
+      const cal = document.getElementById('avail-calendar');
+      if (cal) cal.innerHTML = this.renderCalendar();
+    } catch(e) { console.error(e); }
+  },
+
+  setDuration(n) {
+    State.tripConfig.tripDuration = n;
+    DB.saveTripConfig(State.tripConfig).catch(() => {});
+    this.gotoStep(0); /* re-render to update active button */
+  },
+
+  findBestDates() {
+    const ws  = $('win-start')?.value || State.tripConfig.windowStart || '';
+    const we  = $('win-end')?.value   || State.tripConfig.windowEnd   || '';
+    const dur = State.tripConfig.tripDuration || 5;
+
+    if (!ws || !we) { Toast.show('Set the search window first', 'error'); return; }
+    if (!State.availability.length) {
+      $('best-dates').innerHTML = '<p class="t-muted">No availability entered yet — participants need to mark their dates first.</p>';
+      return;
+    }
+
+    /* Build dateStr → [display_names] */
+    const avMap = {};
+    State.availability.forEach(row => {
+      (row.dates || []).forEach(d => {
+        if (!avMap[d]) avMap[d] = [];
+        avMap[d].push(row.display_name || 'Traveler');
+      });
+    });
+
+    const allDays = getDays(ws, we);
+    const total   = State.availability.length;
+    const windows = [];
+
+    for (let i = 0; i <= allDays.length - dur; i++) {
+      const slice = allDays.slice(i, i + dur);
+      const strs  = slice.map(formatCET);
+
+      /* Participants available for EVERY day in this window */
+      let available = null;
+      strs.forEach(d => {
+        const set = new Set(avMap[d] || []);
+        if (available === null) available = set;
+        else available = new Set([...available].filter(n => set.has(n)));
+      });
+      const avail = available || new Set();
+
+      /* Average coverage (softer tiebreaker) */
+      const avgCov = strs.reduce((acc, d) => acc + (avMap[d]?.length || 0), 0) / dur;
+      windows.push({ start: slice[0], end: slice[dur - 1], startStr: strs[0], available: avail, score: avail.size, avg: avgCov });
+    }
+
+    /* Sort by most people available, then avg coverage */
+    windows.sort((a, b) => b.score - a.score || b.avg - a.avg);
+
+    /* Deduplicate: skip windows within 4 days of a higher-scoring one */
+    const shown = [];
+    windows.forEach(w => {
+      if (shown.length >= 5) return;
+      const tooClose = shown.some(s => Math.abs(parseLocalDate(w.startStr) - parseLocalDate(s.startStr)) < 4 * 86400000);
+      if (!tooClose) shown.push(w);
+    });
+
+    const fmtShort = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/Paris' });
+    const el = $('best-dates');
+
+    if (!shown.length) {
+      el.innerHTML = '<p class="t-muted">No windows found — the search range may be shorter than the trip duration.</p>';
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="section-title">Best Windows · ${dur} nights</div>
+      ${shown.map((w, i) => {
+        const pct   = Math.round((w.score / total) * 100);
+        const tag   = w.score === total ? 'tag-green' : w.score > total / 2 ? 'tag-blue' : 'tag-amber';
+        const label = w.score === total ? 'Everyone free' : `${w.score} of ${total} free`;
+        const fill  = w.score === total ? 'var(--green)' : 'var(--blue)';
+        return `<div class="result-row" style="flex-direction:column;align-items:flex-start;gap:5px;padding:12px 14px;">
+          <div class="flex-between" style="width:100%">
+            <div class="result-city">${fmtShort(w.start)} – ${fmtShort(w.end)}</div>
+            <span class="tag ${tag}">${label}</span>
+          </div>
+          <div class="t-muted t-small">${[...w.available].join(', ') || '—'}</div>
+          <div class="vote-bar-bg" style="width:100%;margin-top:2px;"><div class="vote-bar-fill" style="width:${pct}%;background:${fill}"></div></div>
+        </div>`;
+      }).join('')}`;
+  },
+
+  /* ── STEP 2: LOGISTICS ─────────────────────────────── */
+  renderLogistics() {
+    const list = State.logistics.length ? State.logistics
+      : [{ name:'', departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false }];
+    return `
+      <div class="section-title">Travel Logistics per Participant</div>
+      <p class="t-muted mb-12" style="font-size:13px;">Saved live for the whole group the moment you change anything.</p>
+      ${list.map((l,i) => `
+        <div class="traveler-card">
+          <div class="flex-center gap-8 mb-12">
+            <div class="t-avatar" style="background:${AVATARS[i%8]}22;color:${AVATARS[i%8]};">${(l.name||'?')[0].toUpperCase()}</div>
+            <input class="t-name-input" value="${l.name||''}" placeholder="Name"
+              onchange="Planning.updateLog(${i},'name',this.value)">
+          </div>
+          <div class="grid-2">
+            <div class="field-row">
+              <label class="field-label">Departing from</label>
+              <input class="field-input" value="${l.departure_from||''}" placeholder="City, Country"
+                onchange="Planning.updateLog(${i},'departure_from',this.value)">
+            </div>
+            <div class="field-row">
+              <label class="field-label">Mode of Travel</label>
+              <div class="flex gap-4 mt-8">
+                ${['Air','Train','Car','Other'].map(m =>
+                  `<button class="mode-btn ${l.travel_mode===m?'active':''}"
+                     onclick="Planning.updateLog(${i},'travel_mode','${m}');Planning.gotoStep(2)">${m}</button>`
+                ).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-16 mt-8">
+            <label class="booking-check">
+              <input type="checkbox" ${l.travel_booked?'checked':''}
+                onchange="Planning.updateLog(${i},'travel_booked',this.checked)">
+              Travel booked
+            </label>
+            <label class="booking-check">
+              <input type="checkbox" ${l.hotel_booked?'checked':''}
+                onchange="Planning.updateLog(${i},'hotel_booked',this.checked)">
+              Hotel booked
+            </label>
+          </div>
+        </div>`).join('')}
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-brand" onclick="Planning.addLog()">+ Add Traveler</button>
+        <button class="btn" onclick="Planning.next()">Next: Preferences →</button>
+      </div>`;
+  },
+
+  updateLog(i, field, value) {
+    if (!State.logistics[i]) State.logistics[i] = {};
+    State.logistics[i][field] = value;
+    DB.saveLogistics(State.logistics)
+      .then(() => Toast.show('Saved', 'success', 1200))
+      .catch(() => Toast.show('Save failed', 'error'));
+  },
+
+  addLog() {
+    State.logistics.push({ name:'', departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false });
+    this.gotoStep(2);
+  },
+
+  /* ── STEP 3: PREFERENCES ───────────────────────────── */
+  renderPrefs() {
+    const list = State.prefs.length ? State.prefs
+      : [{ name:'', urban:'Open', accom:'Open', priority_rank:[], word:'' }];
+    return `
+      <div class="section-title">Traveler Preferences</div>
+      ${list.map((p,i) => `
+        <div class="traveler-card">
+          <div class="flex-center gap-8 mb-12">
+            <div class="t-avatar" style="background:${AVATARS[i%8]}22;color:${AVATARS[i%8]};">${(p.name||'?')[0].toUpperCase()}</div>
+            <input class="t-name-input" value="${p.name||''}" placeholder="Name"
+              onchange="Planning.updatePref(${i},'name',this.value)">
+          </div>
+          <div class="grid-2">
+            <div class="field-row">
+              <label class="field-label">Urban / Rural</label>
+              <select class="field-input" onchange="Planning.updatePref(${i},'urban',this.value)">
+                ${['Urban','Rural','Open'].map(o=>`<option ${p.urban===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field-row">
+              <label class="field-label">Accommodation</label>
+              <select class="field-input" onchange="Planning.updatePref(${i},'accom',this.value)">
+                ${['Hotel','Airbnb','Open'].map(o=>`<option ${p.accom===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">Priority Ranking — click in order 1→4 (most to least important)</label>
+            <div class="flex gap-4 flex-wrap mt-8">
+              ${['Great Food','Great Culture','Great Nightlife','Great Nature'].map(cat => {
+                const ri = (p.priority_rank||[]).indexOf(cat);
+                const ranked = ri > -1;
+                return `<button class="prio-btn ${ranked?'prio-ranked':''}" onclick="Planning.togglePrio(${i},'${cat}')">
+                  ${ranked?`<span class="prio-num">${ri+1}</span>`:''}${cat}
+                </button>`;
+              }).join('')}
+            </div>
+            <div class="t-muted t-small mt-8" style="font-style:italic;">Click to rank. Click a ranked item again to remove it.</div>
+          </div>
+          <div class="field-row">
+            <label class="field-label">One Word for This Vacation</label>
+            <input class="field-input" value="${p.word||''}" placeholder="e.g. Adventure, Relax, Discovery"
+              onchange="Planning.updatePref(${i},'word',this.value)">
+          </div>
+        </div>`).join('')}
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-brand" onclick="Planning.addPref()">+ Add Traveler</button>
+        <button class="btn" onclick="Planning.next()">View Dashboard →</button>
+      </div>`;
+  },
+
+  updatePref(i, field, value) {
+    if (!State.prefs[i]) State.prefs[i] = { priority_rank:[] };
+    State.prefs[i][field] = value;
+    DB.savePrefs(State.prefs)
+      .then(() => Toast.show('Saved', 'success', 1200))
+      .catch(() => Toast.show('Save failed', 'error'));
+  },
+
+  addPref() {
+    State.prefs.push({ name:'', urban:'Open', accom:'Open', priority_rank:[], word:'' });
+    this.gotoStep(3);
+  },
+
+  togglePrio(i, cat) {
+    if (!State.prefs[i]) State.prefs[i] = { priority_rank:[] };
+    const rank = State.prefs[i].priority_rank || [];
+    const idx  = rank.indexOf(cat);
+    if (idx > -1) {
+      rank.splice(idx, 1);
+    } else if (rank.length < 4) {
+      rank.push(cat);
+    }
+    State.prefs[i].priority_rank = rank;
+    DB.savePrefs(State.prefs).catch(() => {});
+    this.gotoStep(3);
+  },
+
+  /* ── STEP 4: DASHBOARD ─────────────────────────────── */
+  renderDashboard() {
+    const prefs   = State.prefs;
+    const urban   = prefs.filter(p=>p.urban==='Urban').length;
+    const hotel   = prefs.filter(p=>p.accom==='Hotel').length;
+    const words   = prefs.map(p=>p.word).filter(Boolean).join(' · ') || '—';
+    const topPri  = this.getMostCommonPriority();
+    const top5    = this.scoreDestinationsCached().slice(0,5);
+    return `
+      <div class="section-title">Group Preference Summary</div>
+      <div class="stat-grid mb-16">
+        <div class="stat-card"><div class="stat-val">${urban}/${prefs.length}</div><div class="stat-lbl">Prefer Urban</div></div>
+        <div class="stat-card"><div class="stat-val">${hotel}/${prefs.length}</div><div class="stat-lbl">Prefer Hotel</div></div>
+        <div class="stat-card" style="grid-column:span 2;"><div class="stat-val" style="font-size:14px;font-style:italic;">${words}</div><div class="stat-lbl">Vacation Words</div></div>
+        <div class="stat-card" style="grid-column:span 2;"><div class="stat-val" style="font-size:15px;">#1 Priority: ${topPri}</div><div class="stat-lbl">Group Consensus</div></div>
+      </div>
+      <div class="section-title">Top 5 Destination Matches</div>
+      ${top5.map((s,i) => {
+        const tags = this.getMatchTags(s.d).map(t=>`<span class="tag tag-brand">${t}</span>`).join('');
+        return `<div class="match-card ${i===0?'top':''}">
+          <div class="match-rank">${i+1}</div>
+          <div style="flex:1;">
+            <div class="match-city">${s.city}</div>
+            <div class="t-muted t-small">${s.country} · ${s.d.size}</div>
+            <div class="flex gap-4 flex-wrap mt-8">${tags}</div>
+          </div>
+          <div class="match-score">${Math.round(s.score)}<span class="t-muted" style="font-size:11px;">/100</span></div>
+        </div>`;
+      }).join('')}
+      <div class="mt-16"><button class="btn btn-brand" onclick="Planning.next()">Proceed to Vote →</button></div>`;
+  },
+
+  getMostCommonPriority() {
+    const count = {};
+    State.prefs.forEach(p => (p.priority_rank||[]).forEach((r,i) => { if(i===0) count[r]=(count[r]||0)+1; }));
+    return Object.entries(count).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'Great Food';
+  },
+
+  scoreDestinations() {
+    const DIM_MAP   = { 'Great Food':'Dining', 'Great Culture':'Culture', 'Great Nature':'Nature', 'Great Nightlife':'Nightlife', Food:'Dining', Culture:'Culture', Nature:'Nature', Nightlife:'Nightlife' };
+    const weights   = {};
+    DIMS.forEach(d => weights[d] = 1);
+    State.prefs.forEach(p => (p.priority_rank||[]).forEach((r,i) => {
+      const d = DIM_MAP[r]; if (d) weights[d] += (4-i);
+    }));
+    const n         = State.prefs.length || 1;
+    const urbanBias = State.prefs.filter(p=>p.urban==='Urban').length / n;
+    const sizeBonus = urbanBias > 0.5
+      ? {'Large City':5,'Medium City':3,'Small City':1,'Village':0}
+      : {'Village':5,'Small City':4,'Medium City':2,'Large City':0};
+    const maxScore  = DIMS.length * 5 * 8 + 5;
+    return State.destinations.map(d => {
+      let score = DIMS.reduce((acc,dim) => acc + d.scores[dim] * (weights[dim]||1), 0);
+      score += sizeBonus[d.size] || 0;
+      return { city:d.city, country:d.country, d, score:Math.round(score/maxScore*100) };
+    }).sort((a,b) => b.score-a.score);
+  },
+
+  getMatchTags(d) {
+    const t = [];
+    if(d.scores.Dining>=4)    t.push('Great Food');
+    if(d.scores.Culture>=4)   t.push('Rich Culture');
+    if(d.scores.Nature>=4)    t.push('Nature');
+    if(d.scores.Nightlife>=4) t.push('Nightlife');
+    if(d.scores.Budget>=4)    t.push('Great Value');
+    return t.slice(0,3);
+  },
+
+  /* Cache scored destinations — preferences rarely change between renders */
+  _scoredCache: null,
+  _scoredPrefsKey: '',
+  scoreDestinationsCached() {
+    const key = JSON.stringify(State.prefs);
+    if (this._scoredCache && this._scoredPrefsKey === key) return this._scoredCache;
+    this._scoredCache     = this.scoreDestinations();
+    this._scoredPrefsKey  = key;
+    return this._scoredCache;
+  },
+
+  getTopDest() { return this.scoreDestinationsCached()[0]?.city || 'Barcelona'; },
+
+  /* ── STEP 5: VOTE ──────────────────────────────────── */
+  renderVote() {
+    const top5 = this.scoreDestinationsCached().slice(0,5);
+    return `
+      <div class="section-title">Cast Your Vote</div>
+      <p class="t-muted mb-12" style="font-size:13px;">Select your top 2 destinations. Your vote is saved instantly for everyone.</p>
+      <div class="vote-grid">
+        ${top5.map((s,i) => `
+          <div class="vote-opt" id="vopt-${i}" onclick="Planning.toggleVote(${i},'${s.city}')">
+            <span class="vote-check" id="vchk-${i}">✓</span>
+            <div class="vote-city">${s.city}</div>
+            <div class="t-muted t-small">${s.country}</div>
+            <div class="t-small t-brand mt-8" style="font-weight:500;">${s.score}/100 match</div>
+          </div>`).join('')}
+      </div>
+      <div class="field-row">
+        <label class="field-label">Comments</label>
+        <textarea class="field-input" id="vote-comment" rows="2" placeholder="Share your thoughts..."></textarea>
+      </div>
+      <button class="btn btn-brand" onclick="Planning.submitVote()">Submit Vote →</button>`;
+  },
+
+  toggleVote(i, city) {
+    if (!State._myVotes) State._myVotes = [];
+    const idx = State._myVotes.indexOf(city);
+    if (idx > -1) {
+      State._myVotes.splice(idx, 1);
+      $(`vopt-${i}`).classList.remove('selected');
+    } else if (State._myVotes.length < 2) {
+      State._myVotes.push(city);
+      $(`vopt-${i}`).classList.add('selected');
+    }
+  },
+
+  async submitVote() {
+    if (!State._myVotes?.length) { Toast.show('Select at least 1 destination', 'error'); return; }
+    const comment = $('vote-comment')?.value.trim() || '';
+    try {
+      await DB.saveVote(State._myVotes, comment);
+      Toast.show('Vote saved for everyone!', 'success');
+      this.next();
+    } catch(e) {
+      Toast.show('Failed to save vote', 'error');
+      console.error(e);
+    }
+  },
+
+  /* ── STEP 6: RESULTS ───────────────────────────────── */
+  renderResults() {
+    const top5  = this.scoreDestinationsCached().slice(0,5);
+    const total = Object.values(State.votes).reduce((a,b)=>a+b,0) || 1;
+    const winner = top5[0]?.city || '—';
+    return `
+      <div class="winner-banner">
+        <div style="font-size:28px;">★</div>
+        <div>
+          <div class="t-small t-upper" style="color:rgba(255,255,255,0.55);margin-bottom:3px;">Group's Choice</div>
+          <div class="winner-city">${winner}</div>
+        </div>
+      </div>
+      <div class="section-title">All Votes</div>
+      ${top5.map(s => {
+        const v   = State.votes[s.city] || 0;
+        const pct = Math.round(v/total*100);
+        return `<div class="result-row">
+          <div class="result-city">${s.city}</div>
+          <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${pct}%"></div></div>
+          <div class="vote-pct">${pct}%</div>
+        </div>`;
+      }).join('')}
+      ${(State.voteComments||[]).length ? `
+        <div class="section-title mt-16">Participant Comments</div>
+        ${(State.voteComments||[]).map(c => `
+          <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 14px;">
+            <div class="t-small t-upper t-muted">${c.name}</div>
+            <div style="font-size:13px;font-style:italic;">"${c.text}"</div>
+          </div>`).join('')}
+      ` : ''}
+      <div class="mt-16"><button class="btn btn-brand" onclick="Planning.next()">Organizer Confirmation →</button></div>`;
+  },
+
+  /* ── STEP 7: CONFIRM ───────────────────────────────── */
+  renderConfirm() {
+    const cfg = State.tripConfig;
+    return `
+      <div class="section-title">Organizer — Final Confirmation</div>
+      <div class="grid-2">
+        <div class="field-row">
+          <label class="field-label">Selected Destination</label>
+          <input class="field-input" id="final-dest" value="${cfg.dest||''}" placeholder="City name">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Override Reason (optional)</label>
+          <input class="field-input" placeholder="If changing the group vote...">
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field-row">
+          <label class="field-label">Trip Start</label>
+          <input class="field-input" type="date" id="trip-start" value="${cfg.start||''}">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Trip End</label>
+          <input class="field-input" type="date" id="trip-end" value="${cfg.end||''}">
+        </div>
+      </div>
+      <button class="btn btn-brand mb-16" onclick="Planning.confirmTrip()">Confirm Trip ✓</button>
+      <div id="city-detail-panel" style="display:none;">
+        <div class="section-title">City Overview &amp; Accommodation Options</div>
+        <div id="city-detail-card"></div>
+      </div>`;
+  },
+
+  async confirmTrip() {
+    const destName = $('final-dest').value || this.getTopDest();
+    const destObj  = State.destinations.find(d=>d.city===destName) || State.destinations[0];
+    const config   = { dest:destName, country:destObj?.country||'', start:$('trip-start').value, end:$('trip-end').value };
+    try {
+      await DB.saveTripConfig(config);
+      State.tripConfig = config;
+      Toast.show('Trip confirmed — everyone can see it now!', 'success');
+      $('city-detail-card').innerHTML = CityCard.build(destName, config.country);
+      $('city-detail-panel').style.display = 'block';
+      Itinerary.seedDays();
+      Photos.seedDays();
+    } catch(e) {
+      Toast.show('Failed to save trip', 'error');
+      console.error(e);
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   CITY CARD  — schematic map + hotel tiers
+═══════════════════════════════════════════════════════════════ */
+const CityCard = {
+  build(city, country) {
+    const hotels = HOTEL_DATA[city] || HOTEL_DATA._default;
+    const tiers  = [
+      { label:'Luxury Options',    key:'luxury', tag:'tag-amber' },
+      { label:'Mid-Range Options', key:'medium', tag:'tag-blue'  },
+      { label:'Budget Options',    key:'budget', tag:'tag-green' }
+    ];
+    return `
+      <div class="city-card">
+        <div class="city-card-head">
+          <div>
+            <div class="city-card-name">${city}</div>
+            <div style="font-size:11px;opacity:0.65;margin-top:3px;">${country}</div>
+          </div>
+          <a href="https://www.google.com/maps/search/${encodeURIComponent(city+' '+country)}"
+             target="_blank"
+             style="color:rgba(255,255,255,0.7);font-size:11px;text-decoration:none;border:1px solid rgba(255,255,255,0.3);padding:4px 10px;border-radius:3px;">
+            Open in Maps ↗
+          </a>
+        </div>
+        <div class="city-map">${this.buildMapSVG(city, country)}</div>
+        <div class="hotel-section">
+          ${tiers.map(t => `
+            <div class="hotel-tier-lbl"><span class="tag ${t.tag}">${t.label}</span></div>
+            <div class="hotel-grid">
+              ${hotels[t.key].map(h => {
+                const [name,price] = h.split(' — ');
+                return `<div class="hotel-card"><div class="hotel-name">${name}</div><div class="hotel-price">${price||''}</div></div>`;
+              }).join('')}
+            </div>`).join('')}
+        </div>
+      </div>`;
+  },
+
+  buildMapSVG(city, country) {
+    const { cx, cy } = MAP_COORDS[city] || MAP_COORDS._default;
+    const px = cx * 400, py = cy * 160;
+    return `<svg viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg">
+      <rect width="400" height="160" fill="#D6E8F5"/>
+      <ellipse cx="190" cy="78" rx="142" ry="60" fill="#C8DFEE"/>
+      <path d="M80,98 Q110,64 150,60 Q172,54 185,64 Q200,54 218,57 Q238,50 258,62 Q280,56 305,70 Q322,80 310,94 Q295,106 272,98 Q250,110 225,104 Q200,116 176,108 Q155,116 135,106 Q110,112 95,100 Z" fill="#7DB87D" opacity="0.4"/>
+      <circle cx="${px}" cy="${py}" r="7" fill="#E8452C" opacity="0.9"/>
+      <circle cx="${px}" cy="${py}" r="13" fill="none" stroke="#E8452C" stroke-width="1.5" opacity="0.5"/>
+      <text x="${px+16}" y="${py+4}"  font-family="Georgia,serif" font-size="11" fill="#1A1814" font-weight="700">${city}</text>
+      <text x="${px+16}" y="${py+16}" font-family="sans-serif" font-size="9" fill="#7A7670">${country}</text>
+      <text x="5" y="155" font-family="sans-serif" font-size="8" fill="#7A7670">Schematic — not to scale</text>
+    </svg>`;
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   ITINERARY
+═══════════════════════════════════════════════════════════════ */
+const Itinerary = {
+  seedDays() {
+    const cfg = State.tripConfig;
+    if (!cfg.start || !cfg.end) return;
+    const days = getDays(cfg.start, cfg.end);
+    $('iti-subtitle').textContent =
+      `${cfg.dest} · ${fmtDate(days[0])} – ${fmtDate(days[days.length-1])} · ${days.length} days`;
+    days.forEach((_,i) => initDayData(i));
+  },
+
+  refresh() {
+    if (!State.tripConfig.dest) return;
+    this.switchView(State.itiView);
+  },
+
+  switchView(view) {
+    State.itiView = view;
+    $('vbtn-overview').classList.toggle('active', view==='overview');
+    $('vbtn-detail').classList.toggle('active',   view==='detail');
+    $('iti-overview-panel').style.display = view==='overview' ? '' : 'none';
+    $('iti-detail-panel').style.display   = view==='detail'   ? '' : 'none';
+    if (view==='overview') this.renderOverview();
+    if (view==='detail')   this.renderDetail();
+  },
+
+  /* ── OVERVIEW: all days at a glance ──────────────── */
+  renderOverview() {
+    const cfg = State.tripConfig;
+    if (!cfg.dest) { $('iti-ov-grid').innerHTML = ''; return; }
+    const days = getDays(cfg.start, cfg.end);
+    $('iti-ov-grid').innerHTML = days.map((d,i) =>
+      this.buildOverviewCol(d, i, initDayData(i))
+    ).join('');
+  },
+
+  buildOverviewCol(date, idx, data) {
+    const fixedSlots = FIXED_SLOTS.map(s => {
+      const key   = slotKey(s);
+      const val   = data[key] || '';
+      const conf  = data[key+'_confirmed'];
+      const state = !val ? 'empty' : conf ? 'confirmed' : 'filled';
+      return `<div class="ov-slot ${state}">
+        <div class="ov-slot-lbl ${state}">${s}</div>
+        <div class="ov-slot-val">${val || '—'}</div>
+      </div>`;
+    }).join('');
+
+    const pills = TIME_BLOCKS.map((t,bi) => {
+      const val   = (data.blocks||[])[bi] || '';
+      const state = val ? 'filled' : 'empty';
+      const short = val ? (val.length>14 ? val.slice(0,14)+'…' : val) : t;
+      return `<div class="ov-time-pill ${state}"
+        draggable="true"
+        ondragstart="Itinerary.onDragStart(event,${idx},${bi})"
+        ondragover="Itinerary.onDragOver(event)"
+        ondragleave="Itinerary.onDragLeave(event)"
+        ondrop="Itinerary.onDrop(event,${idx},${bi})"
+        ondragend="Itinerary.onDragEnd(event)"
+        title="Drag to swap with another day's time block">
+        <span class="pill-time">${t.split('–')[0]}</span>
+        <span>${short}</span>
+      </div>`;
+    }).join('');
+
+    const pct = dayCompletionPct(data);
+    return `
+      <div class="ov-day-col" onclick="Itinerary.jumpToDay(${idx})">
+        <div class="ov-day-head">
+          <div class="ov-weekday">${WEEKDAYS[date.getDay()]}</div>
+          <div class="ov-date">${date.getDate()} ${MONTHS_S[date.getMonth()]}</div>
+        </div>
+        <div class="ov-slots">${fixedSlots}</div>
+        <div class="ov-time-row">${pills}</div>
+        <div class="ov-completion">
+          <span>${pct}%</span>
+          <div class="ov-prog-bar"><div class="ov-prog-fill" style="width:${pct}%"></div></div>
+          <span>done</span>
+        </div>
+      </div>`;
+  },
+
+  jumpToDay(idx) {
+    State.itiDayIdx = idx;
+    this.switchView('detail');
+  },
+
+  /* ── DETAIL: one day, fully editable ─────────────── */
+  renderDetail() {
+    const cfg = State.tripConfig;
+    if (!cfg.dest) return;
+    const days = getDays(cfg.start, cfg.end);
+    $('day-tabs').innerHTML = days.map((d,i) =>
+      `<button class="day-tab ${i===State.itiDayIdx?'active':''}"
+         onclick="Itinerary.selectDay(${i})">${fmtDate(d)}</button>`
+    ).join('');
+    $('day-panels').innerHTML = days.map((d,i) =>
+      `<div class="day-panel ${i===State.itiDayIdx?'active':''}" id="dpanel-${i}">
+         ${this.buildDayPanel(d,i)}
+       </div>`
+    ).join('');
+  },
+
+  selectDay(idx) {
+    State.itiDayIdx = idx;
+    document.querySelectorAll('.day-tab').forEach((t,i)  => t.classList.toggle('active', i===idx));
+    document.querySelectorAll('.day-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+  },
+
+  buildDayPanel(date, idx) {
+    const data = initDayData(idx);
+    const fixed = FIXED_SLOTS.map(s => {
+      const key  = slotKey(s);
+      const conf = key+'_confirmed';
+      const by   = key+'_by';
+      return `<div class="fixed-slot">
+        <div class="fixed-slot-lbl">${s}</div>
+        <input class="fixed-slot-input" maxlength="120"
+          placeholder="${s==='Hotel'?'Hotel name...':'Restaurant / venue...'}"
+          value="${data[key]||''}"
+          oninput="Itinerary.updateField(${idx},'${key}',this.value)">
+        <div class="check-row">
+          <input type="checkbox" ${data[conf]?'checked':''}
+            onchange="Itinerary.updateField(${idx},'${conf}',this.checked)">
+          <label>Reservation confirmed</label>
+        </div>
+        <div class="fixed-slot-by">
+          By: <input class="fixed-slot-by-input" value="${data[by]||''}" placeholder="Name"
+            oninput="Itinerary.updateField(${idx},'${by}',this.value)">
+        </div>
+      </div>`;
+    }).join('');
+
+    const blocks = TIME_BLOCKS.map((t,bi) =>
+      `<div class="time-block">
+         <div class="time-lbl">${t}</div>
+         <input class="time-input" maxlength="120" placeholder="Activity..."
+           value="${(data.blocks||[])[bi]||''}"
+           oninput="Itinerary.updateBlock(${idx},${bi},this.value)">
+       </div>`
+    ).join('');
+
+    return `
+      <div class="day-panel-title flex-center gap-8">
+        ${WEEKDAYS[date.getDay()]}, ${MONTHS_S[date.getMonth()]} ${date.getDate()}
+        · <span class="t-brand">${State.tripConfig.dest}</span>
+        <span class="saved-dot" id="saved-${idx}">Saved ✓</span>
+      </div>
+      <div class="fixed-slots mb-12">${fixed}</div>
+      <div class="time-blocks">${blocks}</div>`;
+  },
+
+  /* ── DRAG-AND-SWAP between days ───────────────────── */
+  _drag: null,
+
+  onDragStart(evt, dayIdx, blockIdx) {
+    this._drag = { dayIdx, blockIdx };
+    evt.target.classList.add('dragging');
+    evt.dataTransfer.effectAllowed = 'move';
+  },
+  onDragOver(evt) {
+    evt.preventDefault();
+    evt.dataTransfer.dropEffect = 'move';
+    evt.currentTarget.classList.add('drag-over');
+  },
+  onDragLeave(evt) {
+    evt.currentTarget.classList.remove('drag-over');
+  },
+  onDragEnd(evt) {
+    evt.target.classList.remove('dragging');
+    document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    this._drag = null;
+  },
+  async onDrop(evt, toDayIdx, toBlockIdx) {
+    evt.preventDefault();
+    evt.currentTarget.classList.remove('drag-over');
+    const src = this._drag;
+    if (!src) return;
+    if (src.dayIdx === toDayIdx && src.blockIdx === toBlockIdx) return;
+    await this.swapBlocks(src.dayIdx, src.blockIdx, toDayIdx, toBlockIdx);
+  },
+  async swapBlocks(fromDay, fromBlock, toDay, toBlock) {
+    const a = initDayData(fromDay);
+    const b = initDayData(toDay);
+    if (!a.blocks) a.blocks = ['','','','',''];
+    if (!b.blocks) b.blocks = ['','','','',''];
+    const tmp       = a.blocks[fromBlock];
+    a.blocks[fromBlock] = b.blocks[toBlock];
+    b.blocks[toBlock]   = tmp;
+    try {
+      const saves = [DB.saveItineraryDay(fromDay, a)];
+      if (toDay !== fromDay) saves.push(DB.saveItineraryDay(toDay, b));
+      await Promise.all(saves);
+      this.renderOverview();
+      Toast.show('Activity swapped!', 'success', 1500);
+    } catch(e) {
+      Toast.show('Swap failed — try again', 'error');
+      console.error(e);
+    }
+  },
+
+  /* Debounced save — 800ms after last keystroke */
+  _timers: {},
+  updateField(dayIdx, field, value) {
+    initDayData(dayIdx)[field] = value;
+    this._scheduleSave(dayIdx);
+  },
+  updateBlock(dayIdx, bi, value) {
+    const data = initDayData(dayIdx);
+    if (!data.blocks) data.blocks = ['','','','',''];
+    data.blocks[bi] = value;
+    this._scheduleSave(dayIdx);
+  },
+  _scheduleSave(dayIdx) {
+    clearTimeout(this._timers[dayIdx]);
+    this._timers[dayIdx] = setTimeout(async () => {
+      try {
+        await DB.saveItineraryDay(dayIdx, State.itinerary[dayIdx]);
+        const dot = $(`saved-${dayIdx}`);
+        if (dot) { dot.classList.add('show'); setTimeout(()=>dot.classList.remove('show'), 2000); }
+      } catch(e) {
+        Toast.show('Itinerary save failed', 'error');
+      }
+    }, 800);
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   PHOTOS
+═══════════════════════════════════════════════════════════════ */
+const Photos = {
+  seedDays() { State.photoDayIdx = 0; },
+
+  render() {
+    const cfg = State.tripConfig;
+    if (!cfg.dest) {
+      $('photo-grid').innerHTML = '<p class="t-muted" style="font-size:13px;">Confirm your trip first to upload photos.</p>';
+      $('photo-day-tabs').innerHTML = '';
+      return;
+    }
+    const days = getDays(cfg.start, cfg.end);
+    $('photo-day-tabs').innerHTML = days.map((d,i) =>
+      `<button class="btn btn-sm ${State.photoDayIdx===i?'btn-brand':'btn-ghost'}"
+         onclick="Photos.switchDay(${i})">${fmtDate(d)}</button>`
+    ).join('');
+    this.renderGrid();
+  },
+
+  switchDay(i) { State.photoDayIdx = i; this.render(); },
+
+  renderGrid() {
+    const photos = State.photos[State.photoDayIdx] || [];
+    const grid   = $('photo-grid');
+    if (!grid) return;
+    const thumbs = photos.map(p => `
+      <div class="photo-thumb">
+        <img src="${p.url}" alt="trip photo" loading="lazy">
+        <button class="photo-delete" onclick="Photos.deletePhoto('${p.id}','${p.path}')">✕</button>
+      </div>`
+    ).join('');
+    const addBtn = photos.length < 15
+      ? `<label class="photo-add">+
+           <input type="file" accept="image/*" multiple style="display:none;"
+             onchange="Photos.upload(event,${State.photoDayIdx})">
+         </label>`
+      : '';
+    grid.innerHTML = thumbs + addBtn;
+  },
+
+  async upload(evt, dayIdx) {
+    const remaining = 15 - (State.photos[dayIdx]||[]).length;
+    const files     = Array.from(evt.target.files).slice(0, remaining);
+    for (const file of files) {
+      try {
+        Toast.show('Uploading...', 'info', 2000);
+        await DB.uploadPhoto(dayIdx, file);
+        Toast.show('Photo uploaded!', 'success');
+      } catch(e) {
+        Toast.show('Upload failed', 'error');
+        console.error(e);
+      }
+    }
+  },
+
+  generatePhotobook() {
+    const cfg = State.tripConfig;
+    if (!cfg.dest) { Toast.show('Confirm your trip first', 'error'); return; }
+    const days = getDays(cfg.start, cfg.end);
+    const hasPics = days.some((_,i) => (State.photos[i]||[]).length > 0);
+    if (!hasPics) { Toast.show('Upload photos first', 'info'); return; }
+
+    let html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<title>${cfg.dest} — Voyage Photobook</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:#1A1814;color:#FAFAF8;}
+  .cover{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;}
+  .cover-logo{font-size:14px;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,.4);margin-bottom:40px;}
+  .cover-dest{font-family:'Playfair Display',serif;font-size:80px;font-style:italic;color:#E8452C;line-height:1;}
+  .cover-dates{font-size:18px;color:rgba(255,255,255,.5);margin-top:20px;letter-spacing:.08em;}
+  .cover-tag{font-size:13px;color:rgba(255,255,255,.3);margin-top:12px;text-transform:uppercase;letter-spacing:.1em;}
+  .day-section{padding:56px 48px;break-before:page;page-break-before:always;}
+  .day-header{border-left:4px solid #E8452C;padding-left:18px;margin-bottom:28px;}
+  .day-name{font-family:'Playfair Display',serif;font-size:40px;font-style:italic;color:white;}
+  .day-meta{font-size:13px;color:rgba(255,255,255,.4);margin-top:6px;text-transform:uppercase;letter-spacing:.1em;}
+  .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .photo-grid.cols-1{grid-template-columns:1fr;max-width:500px;}
+  .photo-grid.cols-2{grid-template-columns:repeat(2,1fr);max-width:700px;}
+  .photo-wrap{overflow:hidden;aspect-ratio:1;background:#111;}
+  .photo-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .photo-credit{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;text-align:right;}
+  .print-bar{position:fixed;bottom:20px;right:20px;display:flex;gap:8px;z-index:99;}
+  .print-btn{padding:10px 22px;font-size:13px;font-weight:500;border:none;cursor:pointer;border-radius:4px;}
+  .btn-print{background:#E8452C;color:white;}
+  .btn-close{background:rgba(255,255,255,.15);color:white;}
+  @media print{.print-bar{display:none;}body{background:white;color:black;}.cover{background:#1A1814;}.day-name,.cover-dest{color:#E8452C !important;}@page{margin:0;size:A4;}}
+</style></head><body>
+<div class="cover">
+  <div class="cover-logo">voyage.</div>
+  <div class="cover-dest">${cfg.dest}</div>
+  <div class="cover-dates">${cfg.start ? fmtDate(parseLocalDate(cfg.start)) : ''} &ndash; ${cfg.end ? fmtDate(parseLocalDate(cfg.end)) : ''}</div>
+  <div class="cover-tag">A Group Memory · ${Object.values(State.photos).flat().length} Photos</div>
+</div>`;
+
+    days.forEach((d, i) => {
+      const photos = State.photos[i] || [];
+      if (!photos.length) return;
+      const cols = photos.length === 1 ? 'cols-1' : photos.length === 2 ? 'cols-2' : '';
+      html += `<div class="day-section">
+  <div class="day-header">
+    <div class="day-name">${WEEKDAYS[d.getDay()]}, ${MONTHS_S[d.getMonth()]} ${d.getDate()}</div>
+    <div class="day-meta">Day ${i+1} &middot; ${photos.length} photo${photos.length!==1?'s':''}</div>
+  </div>
+  <div class="photo-grid ${cols}">
+    ${photos.map(p => `<div>
+      <div class="photo-wrap"><img src="${p.url}" alt="Day ${i+1}"></div>
+      <div class="photo-credit">by ${p.name||'group'}</div>
+    </div>`).join('')}
+  </div>
+</div>`;
+    });
+
+    html += `<div class="print-bar">
+  <button class="print-btn btn-print" onclick="window.print()">Print / Save PDF</button>
+  <button class="print-btn btn-close" onclick="window.close()">Close</button>
+</div></body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { Toast.show('Allow pop-ups to open the photobook', 'info'); return; }
+    win.document.write(html);
+    win.document.close();
+  },
+
+  async deletePhoto(id, path) {
+    if (!confirm('Delete this photo for everyone?')) return;
+    try {
+      await DB.deletePhoto(id, path);
+      Toast.show('Deleted', 'success');
+    } catch(e) {
+      Toast.show('Delete failed', 'error');
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════════════════════════ */
+const Chat = {
+  async load() {
+    try {
+      const msgs = await DB.loadChat();
+      this.render(msgs);
+    } catch(e) { console.error(e); }
+  },
+
+  render(msgs) {
+    const el = $('chat-msgs');
+    if (!el) return;
+    el.innerHTML = (msgs||[]).map(m => {
+      const isMe  = m.user_id === State.user?.id;
+      const color = colorForUser(m.user_id||'x');
+      const time  = m.sent_at
+        ? new Date(m.sent_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
+        : '';
+      return `<div class="chat-msg ${isMe?'mine':''}">
+        <div class="chat-av" style="background:${color}22;color:${color};">${(m.display_name||'?')[0].toUpperCase()}</div>
+        <div>
+          <div class="chat-time">${m.display_name} · ${time}</div>
+          <div class="chat-bubble">${m.text}</div>
+        </div>
+      </div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  },
+
+  async send() {
+    const input = $('chat-input');
+    const text  = input.value.trim();
+    if (!text || !State.user) return;
+    input.value = '';
+    try {
+      await DB.sendMessage(text);
+    } catch(e) {
+      Toast.show('Message failed to send', 'error');
+      input.value = text;
+    }
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOTSTRAP
+═══════════════════════════════════════════════════════════════ */
+Auth.init();
+
+</script>
+</body>
+</html>
