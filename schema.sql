@@ -141,10 +141,11 @@ CREATE POLICY "trips_update" ON trips FOR UPDATE
 CREATE POLICY "trips_delete" ON trips FOR DELETE
   USING (organizer_id = auth.uid());
 
--- trip_members: see members of any trip you belong to (or 'default')
+-- trip_members: see your own rows, default trip, or all members of trips you organise
 CREATE POLICY "members_select" ON trip_members FOR SELECT USING (
   trip_id = 'default'
-  OR trip_id IN (SELECT trip_id FROM trip_members tm WHERE tm.user_id = auth.uid())
+  OR user_id = auth.uid()
+  OR trip_id IN (SELECT id FROM trips WHERE organizer_id = auth.uid())
 );
 
 -- trip_members: any authenticated user can join (invite code validated in app)

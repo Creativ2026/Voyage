@@ -1518,10 +1518,11 @@ const DB = {
     const { error } = await sb.from('trips')
       .insert({ id, name, organizer_id, organizer_message, response_deadline });
     if (error) throw error;
-    await sb.from('trip_members').insert({
+    const { error: memError } = await sb.from('trip_members').insert({
       trip_id: id, user_id: organizer_id,
       role: 'organizer', display_name: Auth.displayName(State.user)
     });
+    if (memError) throw memError;
     return { id, name, organizer_id, organizer_message, response_deadline };
   },
 
