@@ -1569,6 +1569,12 @@ const DB = {
       { onConflict: 'trip_id,lower(email)' }
     );
     if (error) throw error;
+    const redirectTo = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
+    const { error: authError } = await sb.auth.signInWithOtp({
+      email: email.toLowerCase(),
+      options: { emailRedirectTo: redirectTo }
+    });
+    if (authError) throw authError;
   },
 
   async isAllowedOrganizer(email) {
