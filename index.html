@@ -1577,7 +1577,7 @@ const DB = {
       { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id },
       { onConflict: 'trip_id,lower(email)' }
     );
-    if (error) throw error;
+    if (error) throw new Error('DB error: ' + error.message);
 
     const joinUrl = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
     const html = `
@@ -1617,7 +1617,7 @@ const DB = {
         html
       })
     });
-    if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Email send failed'); }
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error('Email error: ' + (e.message || e.name || res.status)); }
   },
 
   async isAllowedOrganizer(email) {
@@ -1934,7 +1934,7 @@ const TripManager = {
       await DB.sendEmailInvite(email, tripName, organizerName);
       $('setup-invite-email').value = '';
       Toast.show(`Invite sent to ${email}`, 'success');
-    } catch(e) { Toast.show('Could not send invite', 'error'); console.error(e); }
+    } catch(e) { Toast.show(e.message || 'Could not send invite', 'error'); console.error(e); }
   },
 
   async removeMember(userId) {
