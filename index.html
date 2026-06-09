@@ -1343,7 +1343,7 @@ const DB = {
       trip_id: State.activeTripId, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       cities, comment: comment || null, voted_at: new Date()
-    }, { onConflict: 'user_id' });
+    }, { onConflict: 'trip_id,user_id' });
     if (error) throw error;
   },
 
