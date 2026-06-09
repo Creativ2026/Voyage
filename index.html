@@ -2170,15 +2170,17 @@ const App = {
     /* Resolve pending email invites and ?join= URL param */
     await TripManager.acceptPendingInvites();
     const joinCode = TripManager.checkJoinParam() || localStorage.getItem('voyage_pending_join');
+    let joinedTripId = null;
     if (joinCode) {
       localStorage.removeItem('voyage_pending_join');
-      await TripManager.joinByCode(joinCode);
+      joinedTripId = await TripManager.joinByCode(joinCode);
+      if (joinedTripId) localStorage.setItem('voyage_active_trip', joinedTripId);
       history.replaceState({}, '', window.location.pathname);
     }
 
     /* Load user's trips and set the active one */
     State.trips = await DB.loadUserTrips();
-    const savedId = localStorage.getItem('voyage_active_trip');
+    const savedId = joinedTripId || localStorage.getItem('voyage_active_trip');
     const active  = State.trips.find(t => t.id === savedId) || State.trips[0];
     State.activeTripId   = active?.id || 'default';
     State.activeTripMeta = active    || await DB.loadTrip('default');
