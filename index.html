@@ -1573,11 +1573,11 @@ const DB = {
   },
 
   async sendEmailInvite(email, tripName, organizerName) {
-    const { error } = await sb.from('trip_invites').upsert(
-      { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id },
-      { onConflict: 'trip_id,lower(email)' }
+    const { error } = await sb.from('trip_invites').insert(
+      { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id }
     );
-    if (error) throw new Error('DB error: ' + error.message);
+    // 23505 = unique_violation (already invited) — safe to ignore, still send the email
+    if (error && error.code !== '23505') throw new Error('DB error: ' + error.message);
 
     const joinUrl = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
     const html = `
