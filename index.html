@@ -992,6 +992,14 @@ textarea.field-input { resize: vertical; }
    — All Supabase interaction is isolated in the DB object.
    — To extend the schema, add a method to DB only.
 ═══════════════════════════════════════════════════════════════ */
+/* Preserve ?join= param through Supabase auth redirects */
+(function() {
+  const pj = new URLSearchParams(window.location.search).get('join');
+  if (pj) localStorage.setItem('voyage_pending_join', pj);
+})();
+
+const RESEND_API_KEY = 're_hMsQq2JF_L9ZrhDBZgMYz9iGUjWP5tpuL';
+
 const { createClient } = supabase;
 const sb = createClient(
   'https://czrujgsqjticquugeeyw.supabase.co',
@@ -1563,18 +1571,53 @@ const DB = {
       .eq('trip_id', tripId).eq('email', email.toLowerCase());
   },
 
-  async sendEmailInvite(email) {
+  async sendEmailInvite(email, tripName, organizerName) {
     const { error } = await sb.from('trip_invites').upsert(
       { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id },
       { onConflict: 'trip_id,lower(email)' }
     );
     if (error) throw error;
-    const redirectTo = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
-    const { error: authError } = await sb.auth.signInWithOtp({
-      email: email.toLowerCase(),
-      options: { emailRedirectTo: redirectTo }
+
+    const joinUrl = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
+    const html = `
+<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#1A1814;">
+  <div style="padding:32px 0 16px;">
+    <span style="font-family:Georgia,serif;font-size:28px;font-weight:700;">voyage<em style="color:#E8452C;font-style:italic;">.</em></span>
+  </div>
+  <h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700;margin:0 0 16px;">
+    ${organizerName} has invited you to join their group trip
+  </h2>
+  <div style="background:#FDF0ED;border-left:3px solid #E8452C;padding:12px 16px;margin:0 0 24px;border-radius:0 4px 4px 0;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:#7A7670;margin-bottom:4px;">Trip</div>
+    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;">${tripName}</div>
+  </div>
+  <p style="font-size:14px;line-height:1.65;color:#444441;margin:0 0 28px;">
+    Click below to open Voyage and join the group. You'll be asked to sign in with this email — no password needed.
+  </p>
+  <a href="${joinUrl}" style="display:inline-block;background:#E8452C;color:white;text-decoration:none;padding:12px 28px;font-size:14px;font-weight:500;border-radius:4px;">
+    Join the Trip →
+  </a>
+  <p style="font-size:12px;color:#7A7670;margin:20px 0 0;">
+    Or enter invite code <strong style="font-family:monospace;letter-spacing:0.1em;font-size:14px;">${State.activeTripId}</strong> manually in the app.
+  </p>
+  <hr style="border:none;border-top:1px solid #E8E6DF;margin:32px 0 20px;">
+  <p style="font-size:11px;color:#7A7670;line-height:1.6;">
+    If you weren't expecting this, you can safely ignore it.<br>
+    Voyage Trip Planning · Group travel, together.
+  </p>
+</div>`;
+
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Voyage Trip Planning <onboarding@resend.dev>',
+        to: email.toLowerCase(),
+        subject: `You've been invited to "${tripName}" — Voyage`,
+        html
+      })
     });
-    if (authError) throw authError;
+    if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Email send failed'); }
   },
 
   async isAllowedOrganizer(email) {
@@ -1884,7 +1927,9 @@ const TripManager = {
     const email = $('setup-invite-email')?.value.trim();
     if (!email || !email.includes('@')) { Toast.show('Enter a valid email', 'error'); return; }
     try {
-      await DB.sendEmailInvite(email);
+      const tripName = State.activeTripMeta?.name || 'our trip';
+      const organizerName = Auth.displayName(State.user);
+      await DB.sendEmailInvite(email, tripName, organizerName);
       $('setup-invite-email').value = '';
       Toast.show(`Invite sent to ${email}`, 'success');
     } catch(e) { Toast.show('Could not send invite', 'error'); console.error(e); }
@@ -2119,8 +2164,9 @@ const App = {
   async boot() {
     /* Resolve pending email invites and ?join= URL param */
     await TripManager.acceptPendingInvites();
-    const joinCode = TripManager.checkJoinParam();
+    const joinCode = TripManager.checkJoinParam() || localStorage.getItem('voyage_pending_join');
     if (joinCode) {
+      localStorage.removeItem('voyage_pending_join');
       await TripManager.joinByCode(joinCode);
       history.replaceState({}, '', window.location.pathname);
     }
