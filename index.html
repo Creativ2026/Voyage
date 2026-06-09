@@ -2403,8 +2403,8 @@ const Planning = {
       <div class="cal-instruction">
         <strong>How to agree on trip dates</strong><br>
         1. The <em>organiser</em> sets a search window (up to ~3 months) and the agreed trip duration in nights below.<br>
-        2. Every participant marks the calendar days they are available — arrival <em>and</em> departure dates included. Click a day to toggle it.<br>
-        3. Hit <strong>Find Best Windows</strong> to discover which periods have the most people free for the full duration.
+        2. Every participant taps their preferred start dates — each tap selects a block covering the full trip duration. Tap a selected day to remove that block.<br>
+        3. Hit <strong>Find Best Windows</strong> to see which periods most people prefer — windows where everyone is available are highlighted.
       </div>
 
       <div class="section-title">Organiser Settings</div>
@@ -2428,16 +2428,16 @@ const Planning = {
       <div class="divider"></div>
       <div class="section-title">Mark Your Availability</div>
       <p class="t-muted" style="font-size:12px;margin-bottom:12px;">
-        Click any day you can travel. Your dates appear in
+        Tap any day to mark a block of dates matching the trip duration. Your dates appear in
         <span style="color:var(--brand);font-weight:600;">red</span>.
-        Green shading shows how many others are free on that day.
-        The number in the corner counts all participants available.
+        Tap any selected day to deselect the whole block.
+        Green shading and the corner number show how many others are also available.
       </p>
       <div id="avail-calendar">${this.renderCalendar()}</div>
       <div class="cal-legend">
         <span><span class="cal-legend-swatch" style="background:var(--brand);"></span>Your dates</span>
-        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.18);"></span>1 person free</span>
-        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.75);"></span>Everyone free</span>
+        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.18);"></span>1 person available</span>
+        <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.75);"></span>Everyone available</span>
       </div>
 
       <div class="flex gap-8 mt-16">
@@ -2520,10 +2520,47 @@ const Planning = {
 
   async toggleDate(dStr) {
     if (!State.user) { Toast.show('Sign in to mark your availability', 'error'); return; }
+    const dur = State.tripConfig.tripDuration || 5;
+    const blockSize = dur + 1; // e.g. 2 nights = 3 days (arrival + 2 nights)
+
     let myRec = State.availability.find(r => r.user_id === State.user.id);
     let dates  = [...(myRec?.dates || [])];
-    const idx  = dates.indexOf(dStr);
-    if (idx > -1) dates.splice(idx, 1); else dates.push(dStr);
+    const isSelected = dates.includes(dStr);
+
+    if (isSelected) {
+      /* Find and remove the full block containing this date */
+      const tapped = parseLocalDate(dStr);
+      let blockToRemove = null;
+      for (let offset = 0; offset < blockSize; offset++) {
+        const candidate = new Date(tapped);
+        candidate.setDate(candidate.getDate() - offset);
+        let fullBlock = true;
+        const block = [];
+        for (let i = 0; i < blockSize; i++) {
+          const d = new Date(candidate);
+          d.setDate(d.getDate() + i);
+          const s = formatCET(d);
+          block.push(s);
+          if (!dates.includes(s)) { fullBlock = false; break; }
+        }
+        if (fullBlock) { blockToRemove = block; break; }
+      }
+      if (blockToRemove) {
+        const toRemove = new Set(blockToRemove);
+        dates = dates.filter(d => !toRemove.has(d));
+      } else {
+        dates = dates.filter(d => d !== dStr);
+      }
+    } else {
+      /* Add a block of blockSize consecutive days starting from this date */
+      const start = parseLocalDate(dStr);
+      for (let i = 0; i < blockSize; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        const s = formatCET(d);
+        if (!dates.includes(s)) dates.push(s);
+      }
+    }
 
     /* Optimistic local update */
     if (myRec) { myRec.dates = dates; }
@@ -2629,7 +2666,7 @@ const Planning = {
       ${shown.map((w, i) => {
         const pct     = Math.round((w.score / total) * 100);
         const tag     = w.score === total ? 'tag-green' : w.score > total / 2 ? 'tag-blue' : 'tag-amber';
-        const label   = w.score === total ? 'Everyone free' : `${w.score} of ${total} free`;
+        const label   = w.score === total ? 'Everyone available' : `${w.score} of ${total} prefer`;
         const fill    = w.score === total ? 'var(--green)' : 'var(--blue)';
         const endStr  = formatCET(w.end);
         const vLabel  = `${fmtShort(w.start)} – ${fmtShort(w.end)}`;
