@@ -345,6 +345,75 @@ textarea.field-input { resize: vertical; }
 .t-upper   { text-transform: uppercase; letter-spacing: 0.07em; }
 .t-display { font-family: var(--ff-display); font-weight: 700; }
 
+/* ─── TRIP SWITCHER (header) ─────────────────────────────────── */
+.trip-tag { display:flex; align-items:center; gap:6px; padding:5px 12px; border:0.5px solid var(--border); border-radius:20px; font-size:12px; cursor:pointer; background:var(--card); transition:border-color .18s,background .18s; max-width:180px; }
+.trip-tag:hover { border-color:var(--brand); background:var(--brand-light); }
+.trip-tag-name  { font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.trip-tag-caret { font-size:9px; color:var(--muted); flex-shrink:0; }
+
+/* ─── OVERLAY MODAL (shared) ─────────────────────────────────── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(26,24,20,0.65); z-index:300; align-items:center; justify-content:center; padding:16px; }
+.overlay.open { display:flex; }
+.overlay-box  { background:var(--card); border:1.5px solid var(--ink); width:100%; max-width:480px; max-height:90vh; overflow-y:auto; }
+.overlay-head { padding:16px 20px 12px; border-bottom:1.5px solid var(--ink); display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:var(--card); z-index:1; }
+.overlay-title { font-family:var(--ff-display); font-size:18px; font-weight:700; }
+.overlay-close { background:none; border:1.5px solid var(--ink); width:28px; height:28px; font-size:13px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.overlay-body { padding:16px 20px 20px; }
+
+/* ─── TRIP CARD ───────────────────────────────────────────────── */
+.trip-card { border:0.5px solid var(--border); padding:12px 14px; margin-bottom:8px; border-radius:var(--radius-lg); cursor:pointer; transition:border-color .18s,background .18s; display:flex; align-items:center; gap:12px; }
+.trip-card:hover, .trip-card.active-trip { border-color:var(--brand); background:var(--brand-light); }
+.trip-card-icon { width:36px; height:36px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; font-family:var(--ff-display); font-weight:700; font-size:15px; flex-shrink:0; }
+.trip-card-name { font-weight:500; font-size:14px; }
+.trip-card-meta { font-size:11px; color:var(--muted); margin-top:2px; }
+.trip-card-role { margin-left:auto; font-size:10px; padding:2px 8px; border-radius:10px; font-weight:500; flex-shrink:0; }
+.role-organizer { background:var(--amber-light); color:var(--amber); }
+.role-member    { background:var(--blue-light);  color:var(--blue);  }
+
+/* ─── ORGANIZER BANNER (Plan tab) ────────────────────────────── */
+.organizer-banner { background:var(--ink); color:white; padding:12px 24px; display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; }
+.ob-left  { flex:1; min-width:0; }
+.ob-title { font-family:var(--ff-display); font-size:16px; font-weight:700; font-style:italic; }
+.ob-msg   { font-size:12px; color:rgba(255,255,255,0.7); margin-top:3px; line-height:1.5; }
+.ob-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.ob-by    { font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.45); }
+.ob-deadline { font-size:12px; font-weight:500; background:rgba(255,255,255,0.12); padding:3px 10px; border-radius:20px; color:white; text-align:right; }
+.ob-deadline.urgent { background:var(--brand); }
+
+/* ─── GATE STRIP (decision deadlines) ───────────────────────── */
+.gate-strip { background:var(--card); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:12px 14px; margin-bottom:16px; }
+.gate-strip.gate-open   { border-left:3px solid var(--blue); }
+.gate-strip.gate-closed { border-left:3px solid var(--green); }
+.gate-strip.gate-urgent { border-left:3px solid var(--brand); }
+.gate-top    { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.gate-label  { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; font-weight:600; color:var(--muted); }
+.gate-status { font-size:13px; font-weight:500; }
+.gate-deadline-txt { font-size:12px; color:var(--muted); margin-top:4px; }
+.gate-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; border-top:0.5px solid var(--border); padding-top:10px; }
+.gate-progress  { height:3px; background:#EEE; border-radius:2px; margin-top:8px; overflow:hidden; }
+.gate-prog-fill { height:100%; border-radius:2px; background:var(--green); transition:width .3s; }
+
+/* ─── MEMBER LIST ─────────────────────────────────────────────── */
+.member-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:0.5px solid var(--border); }
+.member-row:last-child { border-bottom:none; }
+.member-av   { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+.member-name { font-size:13px; font-weight:500; flex:1; }
+.member-meta { font-size:11px; color:var(--muted); }
+
+/* ─── INVITE BOX ──────────────────────────────────────────────── */
+.invite-box  { background:var(--surface); border:1px dashed var(--border-mid); border-radius:var(--radius-lg); padding:14px 16px; margin-top:12px; }
+.invite-code { font-family:monospace; font-size:22px; font-weight:700; letter-spacing:0.12em; color:var(--brand); text-align:center; padding:8px 0; cursor:pointer; }
+.invite-code:hover { opacity:0.75; }
+.invite-hint { font-size:11px; color:var(--muted); text-align:center; margin-top:4px; }
+
+@media (max-width: 767px) {
+  .organizer-banner { padding:10px 16px; }
+  .ob-right { align-items:flex-start; flex-direction:row; flex-wrap:wrap; gap:6px; }
+  .trip-tag { max-width:120px; }
+  .overlay-box { max-width:100%; max-height:100vh; border-left:none; border-right:none; border-bottom:none; align-self:flex-end; }
+  .overlay { align-items:flex-end; padding:0; }
+}
+
 /* ─── NAME PROMPT OVERLAY ───────────────────────────────────── */
 /*
   Shown once on first sign-in when user_metadata.display_name is empty.
@@ -465,6 +534,47 @@ textarea.field-input { resize: vertical; }
   /* Ensure mode buttons wrap on small screens */
   .mode-btn { font-size: 10px; padding: 4px 8px; }
 }
+
+/* ─── STEP COMMENTS ─────────────────────────────────────────── */
+.sc-wrap { margin-top:20px; border-top:1px solid var(--border); padding-top:14px; }
+.sc-toggle { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; padding:4px 0; }
+.sc-toggle-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); }
+.sc-toggle-arrow { font-size:11px; color:var(--muted); transition:transform 0.2s; }
+.sc-body { display:none; margin-top:10px; }
+.sc-body.open { display:block; }
+.sc-msgs { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; padding:2px 0 10px; }
+.sc-msg  { display:flex; align-items:flex-start; gap:8px; }
+.sc-msg.mine { flex-direction:row-reverse; }
+.sc-av   { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+.sc-meta { font-size:10px; color:var(--muted); margin-bottom:3px; }
+.sc-msg.mine .sc-meta { text-align:right; }
+.sc-bubble { font-size:12px; line-height:1.5; background:var(--surface); border:0.5px solid var(--border); border-radius:10px; padding:6px 10px; max-width:260px; word-break:break-word; }
+.sc-msg.mine .sc-bubble { background:var(--ink); color:#fff; border-color:var(--ink); }
+.sc-input-row { display:flex; gap:6px; align-items:center; margin-top:8px; }
+.sc-char { font-size:10px; color:var(--muted); text-align:right; margin-top:3px; }
+.sc-empty { font-size:12px; color:var(--muted); font-style:italic; padding:4px 0 8px; }
+
+/* ─── DATE VOTE SECTION ──────────────────────────────────────── */
+.dv-section { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:14px 16px; margin-top:16px; }
+.dv-hint { font-size:12px; color:var(--muted); font-style:italic; margin-top:4px; }
+.dv-opt { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius); cursor:pointer; transition:border-color 0.15s,background 0.15s; }
+.dv-opt:hover { border-color:var(--brand); }
+.dv-opt.selected { border-color:var(--brand); background:rgba(var(--brand-rgb),0.06); }
+.dv-opt-label { flex:1; font-size:13px; font-weight:500; }
+.dv-opt-tally { font-size:11px; color:var(--muted); white-space:nowrap; }
+.dv-opt-bar { height:3px; background:var(--border); border-radius:2px; margin-top:4px; }
+.dv-opt-bar-fill { height:3px; background:var(--brand); border-radius:2px; transition:width 0.3s; }
+.add-vote-btn { font-size:10px; padding:3px 8px; border-radius:20px; border:1px solid var(--border); background:none; cursor:pointer; color:var(--muted); white-space:nowrap; transition:all 0.15s; }
+.add-vote-btn.active { background:var(--brand); color:#fff; border-color:var(--brand); }
+.add-vote-btn:hover:not(.active) { border-color:var(--brand); color:var(--brand); }
+
+/* ─── SHORTLIST CONTROLS (Dashboard) ────────────────────────── */
+.sl-btn { font-size:10px; padding:3px 8px; border-radius:20px; border:1px solid var(--border); background:none; cursor:pointer; color:var(--muted); transition:all 0.15s; }
+.sl-btn.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+.sl-btn:hover:not(.active) { border-color:var(--ink); color:var(--ink); }
+.sl-status { margin-top:14px; padding:10px 14px; border-radius:var(--radius-lg); border:1px solid var(--border); font-size:13px; }
+.sl-status.ready { border-color:var(--green); background:rgba(46,125,82,0.06); }
+.round-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:20px; font-size:11px; font-weight:600; background:var(--amber-light); color:var(--amber); border:1px solid var(--amber); }
 </style>
 </head>
 <body>
@@ -538,6 +648,10 @@ textarea.field-input { resize: vertical; }
 
   <header class="app-header">
     <div class="logo">voyage<em>.</em></div>
+    <button class="trip-tag" id="trip-tag" onclick="TripManager.openModal()" style="display:none;">
+      <span class="trip-tag-name" id="trip-tag-name">Select Trip</span>
+      <span class="trip-tag-caret">▾</span>
+    </button>
     <nav class="nav-tabs">
       <button class="nav-tab active" data-page="destinations" onclick="App.switchPage('destinations',this)">Destinations</button>
       <button class="nav-tab" data-page="planning" onclick="App.switchPage('planning',this)">Plan Trip</button>
@@ -605,6 +719,7 @@ textarea.field-input { resize: vertical; }
     <div class="page-header">
       <div class="page-title">Trip <em>Planner</em></div>
     </div>
+    <div id="organizer-banner"></div>
     <nav class="step-nav" id="step-nav"></nav>
     <div class="step-body" id="step-body"></div>
   </section>
@@ -615,6 +730,7 @@ textarea.field-input { resize: vertical; }
       <div>
         <div class="page-title">Trip <em>Itinerary</em></div>
         <div class="page-sub" id="iti-subtitle">Confirm your trip in the planner to build the itinerary.</div>
+        <div id="iti-gate-strip"></div>
       </div>
       <div class="iti-view-toggle">
         <button class="view-btn active" id="vbtn-overview" onclick="Itinerary.switchView('overview')">All Days</button>
@@ -708,6 +824,162 @@ textarea.field-input { resize: vertical; }
     </button>
   </nav>
 
+  <!-- ═══ MY TRIPS MODAL ══════════════════════════════════════ -->
+  <div class="overlay" id="trips-modal">
+    <div class="overlay-box">
+      <div class="overlay-head">
+        <div class="overlay-title">My Trips</div>
+        <button class="overlay-close" onclick="$('trips-modal').classList.remove('open')">✕</button>
+      </div>
+      <div class="overlay-body">
+        <div id="trips-modal-body"></div>
+        <div class="divider"></div>
+        <div class="flex gap-8 mt-12">
+          <button class="btn btn-brand" onclick="TripManager.openNewTripModal()">+ New Trip</button>
+          <button class="btn btn-ghost"  onclick="TripManager.openJoinModal()">Join a Trip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NEW TRIP MODAL ════════════════════════════════════════ -->
+  <div class="overlay" id="new-trip-modal">
+    <div class="overlay-box">
+      <div class="overlay-head">
+        <div class="overlay-title">Create a New Trip</div>
+        <button class="overlay-close" onclick="$('new-trip-modal').classList.remove('open')">✕</button>
+      </div>
+      <div class="overlay-body">
+        <div class="field-row">
+          <label class="field-label">Trip Name *</label>
+          <input class="field-input" type="text" id="nt-name"
+            placeholder="e.g. Europe Summer 2026" maxlength="60">
+        </div>
+        <div class="field-row">
+          <label class="field-label">Message to participants</label>
+          <textarea class="field-input" id="nt-msg" rows="2"
+            placeholder="e.g. Hey team, let's lock in our Euro trip!" maxlength="200"></textarea>
+        </div>
+        <div class="field-row">
+          <label class="field-label">Overall response deadline</label>
+          <input class="field-input" type="date" id="nt-deadline">
+        </div>
+        <p class="t-muted mb-16" style="font-size:12px;line-height:1.6;">
+          After creating, you'll set the travel window, invite members, and set
+          per-step deadlines in the Trip Setup page.
+        </p>
+        <button class="btn btn-brand" style="width:100%;justify-content:center;"
+          onclick="TripManager.submitNewTrip()">Create Trip →</button>
+        <p id="nt-error" style="color:var(--brand);font-size:12px;margin-top:10px;min-height:16px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ JOIN TRIP MODAL ═══════════════════════════════════════ -->
+  <div class="overlay" id="join-trip-modal">
+    <div class="overlay-box">
+      <div class="overlay-head">
+        <div class="overlay-title">Join a Trip</div>
+        <button class="overlay-close" onclick="$('join-trip-modal').classList.remove('open')">✕</button>
+      </div>
+      <div class="overlay-body">
+        <p class="t-muted mb-16" style="font-size:13px;">Enter the 6-character code shared by your trip organizer, or click the invite link they sent you.</p>
+        <div class="field-row">
+          <label class="field-label">Invite Code</label>
+          <input class="field-input" type="text" id="join-code-input"
+            placeholder="ABC123" maxlength="10"
+            style="text-transform:uppercase;letter-spacing:0.14em;font-size:18px;text-align:center;"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter') TripManager.submitJoin()">
+        </div>
+        <button class="btn btn-brand" style="width:100%;justify-content:center;"
+          onclick="TripManager.submitJoin()">Join Trip →</button>
+        <p id="join-error" style="color:var(--brand);font-size:12px;margin-top:10px;min-height:16px;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TRIP SETUP MODAL (organizer only) ════════════════════ -->
+  <div class="overlay" id="setup-modal">
+    <div class="overlay-box" style="max-width:540px;">
+      <div class="overlay-head">
+        <div class="overlay-title">Trip Setup</div>
+        <button class="overlay-close" onclick="$('setup-modal').classList.remove('open')">✕</button>
+      </div>
+      <div class="overlay-body">
+
+        <div class="section-title">Travel Window</div>
+        <div class="grid-2 mb-8">
+          <div class="field-row">
+            <label class="field-label">Earliest arrival</label>
+            <input class="field-input" type="date" id="setup-win-start"
+              onchange="TripManager.saveSetupWindow()">
+          </div>
+          <div class="field-row">
+            <label class="field-label">Latest departure</label>
+            <input class="field-input" type="date" id="setup-win-end"
+              onchange="TripManager.saveSetupWindow()">
+          </div>
+        </div>
+        <div class="field-row mb-16">
+          <label class="field-label">Trip duration (nights)</label>
+          <div class="cal-dur-btns" id="setup-dur-btns"></div>
+        </div>
+
+        <div class="section-title">Gate Deadlines</div>
+        <div class="grid-2 mb-16">
+          <div class="field-row">
+            <label class="field-label">Availability due by</label>
+            <input class="field-input" type="date" id="setup-avail-dl"
+              onchange="TripManager.saveSetupDeadlines()">
+          </div>
+          <div class="field-row">
+            <label class="field-label">Destination vote due by</label>
+            <input class="field-input" type="date" id="setup-dest-dl"
+              onchange="TripManager.saveSetupDeadlines()">
+          </div>
+          <div class="field-row">
+            <label class="field-label">Itinerary input due by</label>
+            <input class="field-input" type="date" id="setup-iti-dl"
+              onchange="TripManager.saveSetupDeadlines()">
+          </div>
+          <div class="field-row">
+            <label class="field-label">Overall respond by</label>
+            <input class="field-input" type="date" id="setup-resp-dl"
+              onchange="TripManager.saveSetupDeadlines()">
+          </div>
+        </div>
+
+        <div class="section-title">Invite Members</div>
+        <div class="field-row">
+          <label class="field-label">Invite by email</label>
+          <div class="flex gap-8">
+            <input class="field-input" type="email" id="setup-invite-email"
+              placeholder="friend@email.com"
+              onkeydown="if(event.key==='Enter') TripManager.sendInviteEmail()">
+            <button class="btn btn-sm btn-brand" onclick="TripManager.sendInviteEmail()">Send</button>
+          </div>
+        </div>
+        <div id="setup-invite-list" class="mt-8"></div>
+        <div class="invite-box mt-12">
+          <div class="t-muted t-small t-upper" style="text-align:center;margin-bottom:6px;">Or share this invite code</div>
+          <div class="invite-code" id="setup-invite-code" onclick="TripManager.copyInviteLink()">——</div>
+          <div class="invite-hint">Click to copy invite link · Anyone with this code can join</div>
+        </div>
+
+        <div class="section-title mt-16">Members</div>
+        <div id="setup-members-list"></div>
+
+        <div class="mt-16 flex gap-8">
+          <button class="btn btn-brand" style="flex:1;justify-content:center;"
+            onclick="$('setup-modal').classList.remove('open')">Done →</button>
+          <button class="btn btn-ghost" style="color:var(--brand);border-color:var(--brand);"
+            onclick="TripManager.deleteTrip()">Delete Trip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main-app -->
 
 <div id="toast-container"></div>
@@ -725,8 +997,6 @@ const sb = createClient(
   'https://czrujgsqjticquugeeyw.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnVqZ3NxanRpY3F1dWdlZXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDIyNTQsImV4cCI6MjA5MzAxODI1NH0.PAmYZCdS8FpsEYYNXazE5A2l-ss1DU206ob5GauYg7E'
 );
-
-const TRIP_ID = 'default';
 
 /* ═══════════════════════════════════════════════════════════════
    CONSTANTS
@@ -876,20 +1146,25 @@ const RAW_DESTINATIONS = [
    APP STATE  (UI-only — persistent data comes from Supabase)
 ═══════════════════════════════════════════════════════════════ */
 const State = {
-  user:         null,
-  destinations: [],
-  tripConfig:   {},
-  logistics:    [],
-  prefs:        [],
-  votes:        {},
-  itinerary:    {},   /* { dayIndex: rowData } */
-  photos:       {},   /* { dayIndex: [{ id, url, path, name }] } */
-  itiView:      'overview',
-  itiDayIdx:    0,
-  photoDayIdx:  0,
-  voteComments: [],   /* [{ name, text }] populated by DB.loadVotes */
-  availability: [],   /* [{ user_id, display_name, dates: ['YYYY-MM-DD', …] }] */
-  _subs:        [],   /* Active Supabase real-time subscriptions */
+  user:          null,
+  activeTripId:  'default',   /* updated by TripManager.setActive() */
+  activeTripMeta: null,       /* full trips row for the active trip  */
+  trips:         [],          /* all trips this user belongs to       */
+  tripMembers:   [],          /* members of the active trip           */
+  destinations:  [],
+  tripConfig:    {},
+  logistics:     [],
+  prefs:         [],
+  votes:         {},
+  itinerary:     {},   /* { dayIndex: rowData } */
+  photos:        {},   /* { dayIndex: [{ id, url, path, name }] } */
+  itiView:       'overview',
+  itiDayIdx:     0,
+  photoDayIdx:   0,
+  voteComments:  [],   /* [{ name, text }] populated by DB.loadVotes */
+  availability:  [],   /* [{ user_id, display_name, dates: ['YYYY-MM-DD', …] }] */
+  dateVotes:     { tally: {}, total: 0, myVote: -1 },
+  _subs:         [],   /* Active Supabase real-time subscriptions */
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -974,28 +1249,35 @@ const DB = {
 
   /* ── Trip Config ────────────────────────────────────── */
   async saveTripConfig(cfg) {
-    const { error } = await sb.from('trip_config').upsert({
-      id: TRIP_ID, dest: cfg.dest, country: cfg.country,
-      start_date: cfg.start, end_date: cfg.end,
-      window_start: cfg.windowStart, window_end: cfg.windowEnd,
+    const { error } = await sb.from('trips').update({
+      confirmed_dest: cfg.dest, confirmed_country: cfg.country,
+      confirmed_start: cfg.start || null, confirmed_end: cfg.end || null,
+      window_start: cfg.windowStart || null, window_end: cfg.windowEnd || null,
       trip_duration: cfg.tripDuration || null,
       updated_at: new Date()
-    });
+    }).eq('id', State.activeTripId);
     if (error) throw error;
+    State.activeTripMeta = { ...State.activeTripMeta,
+      confirmed_dest: cfg.dest, confirmed_country: cfg.country,
+      confirmed_start: cfg.start, confirmed_end: cfg.end,
+      window_start: cfg.windowStart, window_end: cfg.windowEnd,
+      trip_duration: cfg.tripDuration };
   },
 
   async loadTripConfig() {
-    const { data } = await sb.from('trip_config').select('*').eq('id', TRIP_ID).single();
+    const { data } = await sb.from('trips').select('*').eq('id', State.activeTripId).single();
+    if (data) State.activeTripMeta = { ...State.activeTripMeta, ...data };
     return data ? {
-      dest: data.dest, country: data.country, start: data.start_date, end: data.end_date,
+      dest: data.confirmed_dest, country: data.confirmed_country,
+      start: data.confirmed_start, end: data.confirmed_end,
       windowStart: data.window_start || '', windowEnd: data.window_end || '',
       tripDuration: data.trip_duration || 5
     } : {};
   },
 
   subTripConfig(cb) {
-    return sb.channel('trip_config').on('postgres_changes',
-      { event: '*', schema: 'public', table: 'trip_config', filter: `id=eq.${TRIP_ID}` },
+    return sb.channel('trip_cfg_' + State.activeTripId).on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'trips', filter: `id=eq.${State.activeTripId}` },
       payload => cb(payload.new)
     ).subscribe();
   },
@@ -1003,17 +1285,17 @@ const DB = {
   /* ── Logistics ──────────────────────────────────────── */
   async saveLogistics(rows) {
     /* Delete all then re-insert — keeps it simple for small groups */
-    await sb.from('logistics').delete().eq('trip_id', TRIP_ID);
+    await sb.from('logistics').delete().eq('trip_id', State.activeTripId);
     if (rows.length) {
       const { error } = await sb.from('logistics').insert(
-        rows.map(r => ({ ...r, trip_id: TRIP_ID, user_id: State.user?.id }))
+        rows.map(r => ({ ...r, trip_id: State.activeTripId, user_id: State.user?.id }))
       );
       if (error) throw error;
     }
   },
 
   async loadLogistics() {
-    const { data } = await sb.from('logistics').select('*').eq('trip_id', TRIP_ID);
+    const { data } = await sb.from('logistics').select('*').eq('trip_id', State.activeTripId);
     return data || [];
   },
 
@@ -1026,17 +1308,17 @@ const DB = {
 
   /* ── Preferences ────────────────────────────────────── */
   async savePrefs(rows) {
-    await sb.from('preferences').delete().eq('trip_id', TRIP_ID);
+    await sb.from('preferences').delete().eq('trip_id', State.activeTripId);
     if (rows.length) {
       const { error } = await sb.from('preferences').insert(
-        rows.map(r => ({ ...r, trip_id: TRIP_ID, user_id: State.user?.id }))
+        rows.map(r => ({ ...r, trip_id: State.activeTripId, user_id: State.user?.id }))
       );
       if (error) throw error;
     }
   },
 
   async loadPrefs() {
-    const { data } = await sb.from('preferences').select('*').eq('trip_id', TRIP_ID);
+    const { data } = await sb.from('preferences').select('*').eq('trip_id', State.activeTripId);
     return data || [];
   },
 
@@ -1050,7 +1332,7 @@ const DB = {
   /* ── Votes ──────────────────────────────────────────── */
   async saveVote(cities, comment) {
     const { error } = await sb.from('votes').upsert({
-      trip_id: TRIP_ID, user_id: State.user.id,
+      trip_id: State.activeTripId, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       cities, comment: comment || null, voted_at: new Date()
     }, { onConflict: 'user_id' });
@@ -1058,7 +1340,7 @@ const DB = {
   },
 
   async loadVotes() {
-    const { data } = await sb.from('votes').select('cities, comment, display_name').eq('trip_id', TRIP_ID);
+    const { data } = await sb.from('votes').select('cities, comment, display_name').eq('trip_id', State.activeTripId);
     const tally = {};
     const comments = [];
     (data || []).forEach(row => {
@@ -1092,7 +1374,7 @@ const DB = {
   ─────────────────────────────────────────────────────────── */
   async saveAvailability(dates) {
     const { error } = await sb.from('availability').upsert({
-      trip_id: TRIP_ID, user_id: State.user.id,
+      trip_id: State.activeTripId, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       dates, updated_at: new Date()
     }, { onConflict: 'trip_id,user_id' });
@@ -1100,7 +1382,7 @@ const DB = {
   },
 
   async loadAvailability() {
-    const { data } = await sb.from('availability').select('user_id, display_name, dates').eq('trip_id', TRIP_ID);
+    const { data } = await sb.from('availability').select('user_id, display_name, dates').eq('trip_id', State.activeTripId);
     return data || [];
   },
 
@@ -1114,7 +1396,7 @@ const DB = {
   /* ── Itinerary ──────────────────────────────────────── */
   async saveItineraryDay(dayIdx, data) {
     const { error } = await sb.from('itinerary').upsert({
-      trip_id: TRIP_ID, day_index: dayIdx,
+      trip_id: State.activeTripId, day_index: dayIdx,
       hotel: data.hotel, hotel_by: data.hotel_by, hotel_confirmed: data.hotel_confirmed,
       lunch: data.lunch, lunch_by: data.lunch_by, lunch_confirmed: data.lunch_confirmed,
       dinner: data.dinner, dinner_by: data.dinner_by, dinner_confirmed: data.dinner_confirmed,
@@ -1124,7 +1406,7 @@ const DB = {
   },
 
   async loadItinerary() {
-    const { data } = await sb.from('itinerary').select('*').eq('trip_id', TRIP_ID);
+    const { data } = await sb.from('itinerary').select('*').eq('trip_id', State.activeTripId);
     const iti = {};
     (data || []).forEach(row => {
       iti[row.day_index] = {
@@ -1147,7 +1429,7 @@ const DB = {
   /* ── Chat ───────────────────────────────────────────── */
   async sendMessage(text) {
     const { error } = await sb.from('chat_messages').insert({
-      trip_id: TRIP_ID, user_id: State.user.id,
+      trip_id: State.activeTripId, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       text, sent_at: new Date()
     });
@@ -1156,7 +1438,7 @@ const DB = {
 
   async loadChat() {
     const { data } = await sb.from('chat_messages').select('*')
-      .eq('trip_id', TRIP_ID).order('sent_at', { ascending: true });
+      .eq('trip_id', State.activeTripId).order('sent_at', { ascending: true });
     return data || [];
   },
 
@@ -1169,12 +1451,12 @@ const DB = {
 
   /* ── Photos ─────────────────────────────────────────── */
   async uploadPhoto(dayIdx, file) {
-    const path = `${TRIP_ID}/day${dayIdx}/${State.user.id}_${Date.now()}_${file.name}`;
+    const path = `${State.activeTripId}/day${dayIdx}/${State.user.id}_${Date.now()}_${file.name}`;
     const { error: upErr } = await sb.storage.from('trip-photos').upload(path, file);
     if (upErr) throw upErr;
     const { data: urlData } = sb.storage.from('trip-photos').getPublicUrl(path);
     const { error: dbErr } = await sb.from('photos').insert({
-      trip_id: TRIP_ID, day_index: dayIdx, user_id: State.user.id,
+      trip_id: State.activeTripId, day_index: dayIdx, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       storage_path: path, url: urlData.publicUrl, uploaded_at: new Date()
     });
@@ -1189,7 +1471,7 @@ const DB = {
 
   async loadPhotos() {
     const { data } = await sb.from('photos').select('*')
-      .eq('trip_id', TRIP_ID).order('uploaded_at', { ascending: true });
+      .eq('trip_id', State.activeTripId).order('uploaded_at', { ascending: true });
     const photos = {};
     (data || []).forEach(row => {
       if (!photos[row.day_index]) photos[row.day_index] = [];
@@ -1199,10 +1481,491 @@ const DB = {
   },
 
   subPhotos(cb) {
-    return sb.channel('photos').on('postgres_changes',
+    return sb.channel('photos_' + State.activeTripId).on('postgres_changes',
       { event: '*', schema: 'public', table: 'photos' },
       async () => { const p = await this.loadPhotos(); cb(p); }
     ).subscribe();
+  },
+
+  /* ── Multi-trip management ──────────────────────────────────── */
+
+  async loadTrip(id) {
+    const { data } = await sb.from('trips').select('*').eq('id', id).single();
+    return data;
+  },
+
+  async loadUserTrips() {
+    const { data: memberships } = await sb.from('trip_members')
+      .select('trip_id, role').eq('user_id', State.user.id);
+    if (!memberships?.length) return [];
+    const ids = memberships.map(m => m.trip_id);
+    const { data: trips } = await sb.from('trips').select('*').in('id', ids);
+    return (trips || []).map(t => ({
+      ...t,
+      role: memberships.find(m => m.trip_id === t.id)?.role || 'member'
+    }));
+  },
+
+  async createTrip({ name, organizer_message, response_deadline, organizer_id }) {
+    const id = Math.random().toString(36).substr(2, 6).toUpperCase();
+    const { data: trip, error } = await sb.from('trips')
+      .insert({ id, name, organizer_id, organizer_message, response_deadline })
+      .select().single();
+    if (error) throw error;
+    await sb.from('trip_members').insert({
+      trip_id: id, user_id: organizer_id,
+      role: 'organizer', display_name: Auth.displayName(State.user)
+    });
+    return trip;
+  },
+
+  async updateTrip(fields) {
+    const { error } = await sb.from('trips')
+      .update({ ...fields, updated_at: new Date() })
+      .eq('id', State.activeTripId);
+    if (error) throw error;
+  },
+
+  async loadTripMembers(tripId) {
+    const { data } = await sb.from('trip_members')
+      .select('*').eq('trip_id', tripId || State.activeTripId);
+    return data || [];
+  },
+
+  async joinTrip(tripId, role, displayName) {
+    const { error } = await sb.from('trip_members').upsert(
+      { trip_id: tripId, user_id: State.user.id, role, display_name: displayName },
+      { onConflict: 'trip_id,user_id' }
+    );
+    if (error && error.code !== '23505') throw error;
+  },
+
+  async leaveTrip(tripId) {
+    const { error } = await sb.from('trip_members')
+      .delete().eq('trip_id', tripId).eq('user_id', State.user.id);
+    if (error) throw error;
+  },
+
+  async removeMember(userId) {
+    const { error } = await sb.from('trip_members')
+      .delete().eq('trip_id', State.activeTripId).eq('user_id', userId);
+    if (error) throw error;
+  },
+
+  async checkPendingInvites(email) {
+    const { data } = await sb.from('trip_invites')
+      .select('trip_id').eq('email', email.toLowerCase()).is('accepted_at', null);
+    return data || [];
+  },
+
+  async acceptInvite(tripId, email) {
+    await sb.from('trip_invites')
+      .update({ accepted_at: new Date() })
+      .eq('trip_id', tripId).eq('email', email.toLowerCase());
+  },
+
+  async sendEmailInvite(email) {
+    const { error } = await sb.from('trip_invites').upsert(
+      { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id },
+      { onConflict: 'trip_id,lower(email)' }
+    );
+    if (error) throw error;
+  },
+
+  async isAllowedOrganizer(email) {
+    const { data } = await sb.from('allowed_organizers')
+      .select('email').eq('email', email.toLowerCase()).single();
+    return !!data;
+  },
+
+  /* Reset gate data so organizer can reopen a decision round */
+  async resetAvailability() {
+    await sb.from('availability').delete().eq('trip_id', State.activeTripId);
+  },
+
+  async resetVotes() {
+    await sb.from('votes').delete().eq('trip_id', State.activeTripId);
+  },
+
+  async deleteTrip(tripId) {
+    const { error } = await sb.from('trips').delete().eq('id', tripId);
+    if (error) throw error;
+  },
+
+  /* ── STEP COMMENTS ──────────────────────────────────────────── */
+  async loadStepComments(stepKey) {
+    const { data } = await sb.from('step_comments')
+      .select('*').eq('trip_id', State.activeTripId).eq('step_key', stepKey)
+      .order('sent_at', { ascending: true }).limit(50);
+    return data || [];
+  },
+
+  async sendStepComment(stepKey, text) {
+    const { error } = await sb.from('step_comments').insert({
+      trip_id: State.activeTripId, step_key: stepKey,
+      user_id: State.user.id, display_name: Auth.displayName(State.user), text
+    });
+    if (error) throw error;
+  },
+
+  subAllStepComments(cb) {
+    return sb.channel('sc_' + State.activeTripId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'step_comments',
+          filter: `trip_id=eq.${State.activeTripId}` }, cb)
+      .subscribe();
+  },
+
+  /* ── DATE VOTE OPTIONS ──────────────────────────────────────── */
+  async saveDateVoteOptions(options) {
+    await this.updateTrip({ date_vote_options: options });
+    State.activeTripMeta = { ...State.activeTripMeta, date_vote_options: options };
+  },
+
+  async saveDateVote(optionIndex) {
+    const { error } = await sb.from('date_votes').upsert({
+      trip_id: State.activeTripId, user_id: State.user.id,
+      display_name: Auth.displayName(State.user), option_index: optionIndex
+    }, { onConflict: 'trip_id,user_id' });
+    if (error) throw error;
+  },
+
+  async loadDateVotes() {
+    const { data } = await sb.from('date_votes').select('*').eq('trip_id', State.activeTripId);
+    const tally = {};
+    (data || []).forEach(r => { tally[r.option_index] = (tally[r.option_index] || 0) + 1; });
+    const myRec = (data || []).find(r => r.user_id === State.user?.id);
+    return { tally, total: (data||[]).length, myVote: myRec ? myRec.option_index : -1 };
+  },
+
+  subDateVotes(cb) {
+    return sb.channel('dv_' + State.activeTripId)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'date_votes',
+          filter: `trip_id=eq.${State.activeTripId}` },
+        async () => { const v = await this.loadDateVotes(); cb(v); })
+      .subscribe();
+  },
+
+  async resetDateVotes() {
+    await sb.from('date_votes').delete().eq('trip_id', State.activeTripId);
+  },
+
+  /* ── DESTINATION SHORTLIST ──────────────────────────────────── */
+  async saveDestShortlist(cities, round) {
+    const fields = { dest_shortlist: cities };
+    if (round !== undefined) fields.dest_vote_round = round;
+    await this.updateTrip(fields);
+    State.activeTripMeta = { ...State.activeTripMeta, dest_shortlist: cities,
+      dest_vote_round: round !== undefined ? round : (State.activeTripMeta?.dest_vote_round || 1) };
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   TRIP MANAGER  — creation, joining, switching, gate management
+═══════════════════════════════════════════════════════════════ */
+const TripManager = {
+
+  isOrganizer() {
+    return State.activeTripMeta?.organizer_id === State.user?.id;
+  },
+
+  checkJoinParam() {
+    return new URLSearchParams(window.location.search).get('join');
+  },
+
+  async acceptPendingInvites() {
+    if (!State.user?.email) return;
+    try {
+      const pending = await DB.checkPendingInvites(State.user.email);
+      for (const inv of pending) {
+        await DB.joinTrip(inv.trip_id, 'member', Auth.displayName(State.user));
+        await DB.acceptInvite(inv.trip_id, State.user.email);
+      }
+      if (pending.length) Toast.show(`Joined ${pending.length} trip${pending.length > 1 ? 's' : ''}!`, 'success');
+    } catch(e) { console.error('Invite check failed', e); }
+  },
+
+  async joinByCode(code) {
+    const trimmed = (code || '').trim().toUpperCase();
+    if (!trimmed) return null;
+    try {
+      const { data: trip } = await sb.from('trips').select('id,name').eq('id', trimmed).single();
+      if (!trip) { Toast.show('Trip not found — check the invite code', 'error'); return null; }
+      await DB.joinTrip(trip.id, 'member', Auth.displayName(State.user));
+      Toast.show(`Joined "${trip.name}"!`, 'success');
+      return trip.id;
+    } catch(e) { Toast.show('Could not join trip', 'error'); console.error(e); return null; }
+  },
+
+  async setActive(tripId) {
+    State.activeTripId   = tripId;
+    State.activeTripMeta = State.trips.find(t => t.id === tripId) || await DB.loadTrip(tripId);
+    localStorage.setItem('voyage_active_trip', tripId);
+    State.tripMembers = await DB.loadTripMembers(tripId);
+    this.renderSwitcher();
+    $('trips-modal').classList.remove('open');
+    await App.reloadTripData();
+    Planning.init();
+  },
+
+  renderSwitcher() {
+    const name = State.activeTripMeta?.name || 'My Trip';
+    const el = $('trip-tag-name');
+    if (el) el.textContent = name;
+    const tag = $('trip-tag');
+    if (tag) tag.style.display = 'flex';
+  },
+
+  openModal() {
+    this.renderTripsModal();
+    $('trips-modal').classList.add('open');
+  },
+
+  renderTripsModal() {
+    const body = $('trips-modal-body');
+    if (!body) return;
+    body.innerHTML = State.trips.length
+      ? State.trips.map(t => `
+          <div class="trip-card ${t.id === State.activeTripId ? 'active-trip' : ''}"
+               onclick="TripManager.setActive('${t.id}')">
+            <div class="trip-card-icon" style="background:${colorForUser(t.id)};">
+              ${(t.name||'T')[0].toUpperCase()}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div class="trip-card-name">${t.name}</div>
+              <div class="trip-card-meta">
+                ${t.confirmed_dest ? t.confirmed_dest + ' · ' : ''}
+                ${t.confirmed_start
+                  ? new Date(t.confirmed_start+'T12:00:00Z').toLocaleDateString('en-GB',{month:'short',year:'numeric'})
+                  : 'Dates TBD'}
+              </div>
+            </div>
+            <span class="trip-card-role ${t.role === 'organizer' ? 'role-organizer' : 'role-member'}">
+              ${t.role === 'organizer' ? 'Organizer' : 'Member'}
+            </span>
+          </div>`).join('')
+      : '<p class="t-muted" style="font-size:13px;padding:8px 0;">You have no trips yet.</p>';
+  },
+
+  openNewTripModal() {
+    $('trips-modal').classList.remove('open');
+    $('new-trip-modal').classList.add('open');
+  },
+
+  openJoinModal() {
+    $('trips-modal').classList.remove('open');
+    $('join-trip-modal').classList.add('open');
+  },
+
+  async submitNewTrip() {
+    const name     = $('nt-name').value.trim();
+    const msg      = $('nt-msg').value.trim();
+    const deadline = $('nt-deadline').value;
+    if (!name) { $('nt-error').textContent = 'Please enter a trip name.'; return; }
+    $('nt-error').textContent = '';
+    const allowed = await DB.isAllowedOrganizer(State.user.email);
+    if (!allowed) {
+      $('nt-error').textContent = 'You are not authorized to create trips. Contact the app owner.';
+      return;
+    }
+    try {
+      const trip = await DB.createTrip({
+        name, organizer_message: msg || null,
+        response_deadline: deadline || null, organizer_id: State.user.id
+      });
+      const trips = await DB.loadUserTrips();
+      State.trips = trips;
+      $('new-trip-modal').classList.remove('open');
+      Toast.show(`"${name}" created!`, 'success');
+      await this.setActive(trip.id);
+      this.openSetupModal();
+    } catch(e) { $('nt-error').textContent = 'Could not create trip. Try again.'; console.error(e); }
+  },
+
+  async submitJoin() {
+    const code = $('join-code-input').value.trim();
+    if (!code) { $('join-error').textContent = 'Enter an invite code.'; return; }
+    $('join-error').textContent = '';
+    const tripId = await this.joinByCode(code);
+    if (tripId) {
+      $('join-trip-modal').classList.remove('open');
+      State.trips = await DB.loadUserTrips();
+      await this.setActive(tripId);
+    }
+  },
+
+  /* ── Trip Setup modal (organizer only) ──────────────────────── */
+  openSetupModal() {
+    const meta = State.activeTripMeta || {};
+    /* Travel window */
+    const ws = $('setup-win-start'); if (ws) ws.value = meta.window_start || '';
+    const we = $('setup-win-end');   if (we) we.value = meta.window_end   || '';
+    /* Duration buttons */
+    const dur = meta.trip_duration || 5;
+    const db  = $('setup-dur-btns');
+    if (db) db.innerHTML = [3,4,5,6,7,10,14].map(n =>
+      `<button class="dur-btn ${dur===n?'active':''}" onclick="TripManager.setSetupDuration(${n})">${n} nights</button>`
+    ).join('');
+    /* Gate deadlines */
+    const f = (id, val) => { const el = $(id); if (el) el.value = val || ''; };
+    f('setup-avail-dl', meta.availability_deadline);
+    f('setup-dest-dl',  meta.destination_deadline);
+    f('setup-iti-dl',   meta.itinerary_deadline);
+    f('setup-resp-dl',  meta.response_deadline);
+    /* Invite code */
+    const ic = $('setup-invite-code'); if (ic) ic.textContent = State.activeTripId;
+    /* Members list */
+    this.renderSetupMembers();
+    $('setup-modal').classList.add('open');
+  },
+
+  renderSetupMembers() {
+    const el = $('setup-members-list');
+    if (!el) return;
+    const isOrg = this.isOrganizer();
+    el.innerHTML = State.tripMembers.map(m => `
+      <div class="member-row">
+        <div class="member-av" style="background:${colorForUser(m.user_id)}22;color:${colorForUser(m.user_id)};">
+          ${(m.display_name||'?')[0].toUpperCase()}
+        </div>
+        <div class="member-name">${m.display_name || 'Traveler'}</div>
+        <span class="trip-card-role ${m.role==='organizer'?'role-organizer':'role-member'}">${m.role==='organizer'?'Organizer':'Member'}</span>
+        ${isOrg && m.user_id !== State.user.id
+          ? `<button class="btn btn-sm btn-ghost" onclick="TripManager.removeMember('${m.user_id}')">Remove</button>`
+          : ''}
+      </div>`).join('') || '<p class="t-muted t-small">No members yet.</p>';
+  },
+
+  async setSetupDuration(n) {
+    const meta = State.activeTripMeta || {};
+    await DB.updateTrip({ trip_duration: n });
+    State.activeTripMeta = { ...meta, trip_duration: n };
+    State.tripConfig = { ...State.tripConfig, tripDuration: n };
+    const db = $('setup-dur-btns');
+    if (db) db.querySelectorAll('.dur-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.textContent) === n);
+    });
+  },
+
+  async saveSetupWindow() {
+    const ws = $('setup-win-start')?.value;
+    const we = $('setup-win-end')?.value;
+    if (!ws || !we) return;
+    await DB.updateTrip({ window_start: ws, window_end: we });
+    State.activeTripMeta = { ...State.activeTripMeta, window_start: ws, window_end: we };
+    State.tripConfig = { ...State.tripConfig, windowStart: ws, windowEnd: we };
+    Toast.show('Travel window saved', 'success', 1500);
+    /* refresh availability calendar if on that step */
+    if (State.currentStep === 1) {
+      const cal = $('avail-calendar');
+      if (cal) cal.innerHTML = Planning.renderCalendar();
+    }
+  },
+
+  async saveSetupDeadlines() {
+    const fields = {
+      availability_deadline: $('setup-avail-dl')?.value || null,
+      destination_deadline:  $('setup-dest-dl')?.value  || null,
+      itinerary_deadline:    $('setup-iti-dl')?.value   || null,
+      response_deadline:     $('setup-resp-dl')?.value  || null
+    };
+    await DB.updateTrip(fields);
+    State.activeTripMeta = { ...State.activeTripMeta, ...fields };
+    Toast.show('Deadlines saved', 'success', 1500);
+    this.refreshBanner();
+    if (State.currentStep) Planning.gotoStep(State.currentStep);
+  },
+
+  async sendInviteEmail() {
+    const email = $('setup-invite-email')?.value.trim();
+    if (!email || !email.includes('@')) { Toast.show('Enter a valid email', 'error'); return; }
+    try {
+      await DB.sendEmailInvite(email);
+      $('setup-invite-email').value = '';
+      Toast.show(`Invite sent to ${email}`, 'success');
+    } catch(e) { Toast.show('Could not send invite', 'error'); console.error(e); }
+  },
+
+  async removeMember(userId) {
+    if (!confirm('Remove this member from the trip?')) return;
+    try {
+      await DB.removeMember(userId);
+      State.tripMembers = await DB.loadTripMembers(State.activeTripId);
+      this.renderSetupMembers();
+      Toast.show('Member removed', 'success');
+    } catch(e) { Toast.show('Could not remove member', 'error'); }
+  },
+
+  copyInviteLink() {
+    const url = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
+    navigator.clipboard.writeText(url).then(
+      () => Toast.show('Invite link copied!', 'success'),
+      () => Toast.show(url, 'info', 7000)
+    );
+  },
+
+  /* ── Gate controls ───────────────────────────────────────────── */
+  async closeGate(type) {
+    if (!confirm(`Close the ${type} gate? Participants will see results but can no longer submit changes.`)) return;
+    await this._saveGateField(type + '_closed', true);
+  },
+
+  async reopenGate(type) {
+    await this._saveGateField(type + '_closed', false);
+  },
+
+  async resetGate(type) {
+    const label = { availability: 'availability data', destination: 'all votes', itinerary: 'itinerary data' }[type];
+    if (!confirm(`Reset ${label}? This cannot be undone.`)) return;
+    try {
+      if (type === 'availability') {
+        await DB.resetAvailability();
+        State.availability = [];
+      } else if (type === 'destination') {
+        await DB.resetVotes();
+        State.votes = {};
+      }
+      await this._saveGateField(type + '_closed', false);
+      Toast.show('Gate reset — participants can submit again', 'success');
+    } catch(e) { Toast.show('Reset failed', 'error'); console.error(e); }
+  },
+
+  async _saveGateField(field, value) {
+    try {
+      await DB.updateTrip({ [field]: value });
+      State.activeTripMeta = { ...State.activeTripMeta, [field]: value };
+      if (State.currentStep) Planning.gotoStep(State.currentStep);
+      const gateEl = $('iti-gate-strip');
+      if (gateEl) gateEl.innerHTML = Planning.renderGateStrip('itinerary');
+      Toast.show('Saved', 'success', 1200);
+    } catch(e) { Toast.show('Could not save setting', 'error'); console.error(e); }
+  },
+
+  async deleteTrip() {
+    const name = State.activeTripMeta?.name || 'this trip';
+    if (!confirm(`Delete "${name}" permanently? All planning data, votes, and photos will be lost.`)) return;
+    try {
+      await DB.deleteTrip(State.activeTripId);
+      State.trips = State.trips.filter(t => t.id !== State.activeTripId);
+      $('setup-modal').classList.remove('open');
+      Toast.show('Trip deleted', 'success');
+      /* Switch to another trip or fall back to default */
+      const next = State.trips[0];
+      if (next) {
+        await this.setActive(next.id);
+      } else {
+        State.activeTripId   = 'default';
+        State.activeTripMeta = await DB.loadTrip('default');
+        State.tripMembers    = [];
+        this.renderSwitcher();
+        await App.reloadTripData();
+        Planning.init();
+      }
+    } catch(e) { Toast.show('Could not delete trip', 'error'); console.error(e); }
+  },
+
+  refreshBanner() {
+    const el = $('organizer-banner');
+    if (el) el.innerHTML = Planning.renderOrgBanner();
   }
 };
 
@@ -1315,12 +2078,10 @@ const Auth = {
         if (!hasName) {
           /* First sign-in: show name prompt before booting the app */
           $('name-prompt').classList.add('open');
-          /* Pre-fill with email prefix as a suggestion */
           const suggestion = session.user.email?.split('@')[0] || '';
           $('name-input').value = suggestion;
           $('name-input').select();
         } else {
-          /* Returning user: go straight in */
           this.updateUserUI(session.user);
           await App.boot();
         }
@@ -1344,18 +2105,42 @@ const App = {
     document.querySelectorAll('.nav-tab, .bottom-nav-btn').forEach(t => t.classList.remove('active'));
     $('page-' + page).classList.add('active');
     document.querySelectorAll(`[data-page="${page}"]`).forEach(t => t.classList.add('active'));
+    if (page === 'planning')  TripManager.refreshBanner();
     if (page === 'itinerary') Itinerary.refresh();
     if (page === 'photos')    Photos.render();
     if (page === 'chat')      Chat.load();
   },
 
   async boot() {
-    /* Load all data once, then subscribe to real-time changes */
+    /* Resolve pending email invites and ?join= URL param */
+    await TripManager.acceptPendingInvites();
+    const joinCode = TripManager.checkJoinParam();
+    if (joinCode) {
+      await TripManager.joinByCode(joinCode);
+      history.replaceState({}, '', window.location.pathname);
+    }
+
+    /* Load user's trips and set the active one */
+    State.trips = await DB.loadUserTrips();
+    const savedId = localStorage.getItem('voyage_active_trip');
+    const active  = State.trips.find(t => t.id === savedId) || State.trips[0];
+    State.activeTripId   = active?.id || 'default';
+    State.activeTripMeta = active    || await DB.loadTrip('default');
+    State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
+    TripManager.renderSwitcher();
+
+    await this.reloadTripData();
+    Destinations.init();
+    Planning.init();
+  },
+
+  async reloadTripData() {
+    this.teardown();
     try {
-      const [cfg, logistics, prefs, votes, iti, photos, avail] = await Promise.all([
+      const [cfg, logistics, prefs, votes, iti, photos, avail, dv] = await Promise.all([
         DB.loadTripConfig(), DB.loadLogistics(), DB.loadPrefs(),
         DB.loadVotes(), DB.loadItinerary(), DB.loadPhotos(),
-        DB.loadAvailability()
+        DB.loadAvailability(), DB.loadDateVotes()
       ]);
       State.tripConfig   = cfg;
       State.logistics    = logistics;
@@ -1364,42 +2149,61 @@ const App = {
       State.itinerary    = iti;
       State.photos       = photos;
       State.availability = avail;
+      State.dateVotes    = dv;
       if (cfg.dest) Itinerary.seedDays();
     } catch(e) {
       Toast.show('Could not load trip data', 'error');
       console.error(e);
     }
 
-    /* Real-time subscriptions */
     State._subs = [
-      DB.subTripConfig(cfg => {
+      DB.subTripConfig(row => {
         State.tripConfig = {
-          dest: cfg.dest, country: cfg.country, start: cfg.start_date, end: cfg.end_date,
-          windowStart: cfg.window_start || '', windowEnd: cfg.window_end || '',
-          tripDuration: cfg.trip_duration || 5
+          dest: row.confirmed_dest, country: row.confirmed_country,
+          start: row.confirmed_start, end: row.confirmed_end,
+          windowStart: row.window_start || '', windowEnd: row.window_end || '',
+          tripDuration: row.trip_duration || 5
         };
-        if (cfg.dest) Itinerary.seedDays();
-        Toast.show(`Trip updated: ${cfg.dest}`, 'info');
+        State.activeTripMeta = { ...State.activeTripMeta, ...row };
+        if (row.confirmed_dest) Itinerary.seedDays();
+        TripManager.refreshBanner();
+        if (State.currentStep) Planning.gotoStep(State.currentStep);
+        const gateEl = $('iti-gate-strip');
+        if (gateEl) gateEl.innerHTML = Planning.renderGateStrip('itinerary');
       }),
       DB.subLogistics(rows => { State.logistics = rows; }),
       DB.subPrefs(rows     => { State.prefs = rows; }),
-      DB.subVotes(tally    => { State.votes = tally; }),
+      DB.subVotes(tally    => {
+        State.votes = tally;
+        if (State.currentStep === 5 || State.currentStep === 6) Planning.gotoStep(State.currentStep);
+      }),
       DB.subItinerary(iti  => { State.itinerary = iti; Itinerary.refresh(); }),
       DB.subPhotos(photos  => { State.photos = photos; Photos.renderGrid(); }),
       DB.subChat(msgs      => { Chat.render(msgs); }),
       DB.subAvailability(rows => {
         State.availability = rows;
-        /* Refresh calendar if Step 1 is visible */
-        if (State.currentStep === 0) {
-          const cal = document.getElementById('avail-calendar');
+        if (State.currentStep === 1) {
+          const cal = $('avail-calendar');
           if (cal) cal.innerHTML = Planning.renderCalendar();
         }
       }),
+      DB.subDateVotes(async v => {
+        State.dateVotes = v;
+        if (State.currentStep === 1) {
+          const wrap = $('date-vote-wrap');
+          if (wrap) wrap.innerHTML = Planning.renderDateVoteSection();
+          else Planning.gotoStep(1);
+        }
+      }),
+      DB.subAllStepComments(async () => {
+        if (!State.currentStep) return;
+        const stepKey = STEP_KEYS[State.currentStep - 1];
+        const body = $('sc-body-' + stepKey);
+        if (body && body.classList.contains('open')) {
+          await Planning.loadAndRenderComments(stepKey);
+        }
+      }),
     ];
-
-    /* Init UI modules */
-    Destinations.init();
-    Planning.init();
   },
 
   teardown() {
@@ -1505,9 +2309,12 @@ const STEPS = [
   { label:'Results',     render:() => Planning.renderResults(),   onEnter:()=>{} },
   { label:'Confirm',     render:() => Planning.renderConfirm(),   onEnter:()=>{ const el=$('final-dest'); if(el) el.value=Planning.getTopDest(); } },
 ];
+const STEP_KEYS = ['dates','logistics','prefs','dashboard','vote','results','confirm'];
 
 const Planning = {
   init() {
+    const banner = $('organizer-banner');
+    if (banner) banner.innerHTML = this.renderOrgBanner();
     $('step-nav').innerHTML = STEPS.map((s,i) =>
       `<button class="step-tab" id="stab-${i+1}" onclick="Planning.gotoStep(${i+1})">
          <span class="step-num">${i+1}</span>${s.label}
@@ -1536,6 +2343,7 @@ const Planning = {
     const we  = State.tripConfig.windowEnd   || '';
     const dur = State.tripConfig.tripDuration || 5;
     return `
+      ${this.renderGateStrip('availability')}
       <div class="cal-instruction">
         <strong>How to agree on trip dates</strong><br>
         1. The <em>organiser</em> sets a search window (up to ~3 months) and the agreed trip duration in nights below.<br>
@@ -1580,7 +2388,9 @@ const Planning = {
         <button class="btn btn-brand" onclick="Planning.findBestDates()">Find Best Windows</button>
         <button class="btn" onclick="Planning.next()">Next →</button>
       </div>
-      <div id="best-dates" class="mt-16"></div>`;
+      <div id="best-dates" class="mt-16"></div>
+      <div id="date-vote-wrap">${this.renderDateVoteSection()}</div>
+      ${this.renderStepComments('dates')}`;
   },
 
   renderCalendar() {
@@ -1690,7 +2500,7 @@ const Planning = {
   setDuration(n) {
     State.tripConfig.tripDuration = n;
     DB.saveTripConfig(State.tripConfig).catch(() => {});
-    this.gotoStep(0); /* re-render to update active button */
+    this.gotoStep(State.currentStep);
   },
 
   findBestDates() {
@@ -1754,17 +2564,30 @@ const Planning = {
       return;
     }
 
+    const isOrg    = TripManager.isOrganizer();
+    const pinnedOpts = State.activeTripMeta?.date_vote_options || [];
+
     el.innerHTML = `
       <div class="section-title">Best Windows · ${dur} nights</div>
+      ${isOrg ? '<p class="t-muted t-small mb-8">Pin up to 3 windows below to put them to a group vote.</p>' : ''}
       ${shown.map((w, i) => {
-        const pct   = Math.round((w.score / total) * 100);
-        const tag   = w.score === total ? 'tag-green' : w.score > total / 2 ? 'tag-blue' : 'tag-amber';
-        const label = w.score === total ? 'Everyone free' : `${w.score} of ${total} free`;
-        const fill  = w.score === total ? 'var(--green)' : 'var(--blue)';
+        const pct     = Math.round((w.score / total) * 100);
+        const tag     = w.score === total ? 'tag-green' : w.score > total / 2 ? 'tag-blue' : 'tag-amber';
+        const label   = w.score === total ? 'Everyone free' : `${w.score} of ${total} free`;
+        const fill    = w.score === total ? 'var(--green)' : 'var(--blue)';
+        const endStr  = formatCET(w.end);
+        const vLabel  = `${fmtShort(w.start)} – ${fmtShort(w.end)}`;
+        const pinned  = pinnedOpts.some(o => o.startStr === w.startStr);
         return `<div class="result-row" style="flex-direction:column;align-items:flex-start;gap:5px;padding:12px 14px;">
           <div class="flex-between" style="width:100%">
-            <div class="result-city">${fmtShort(w.start)} – ${fmtShort(w.end)}</div>
-            <span class="tag ${tag}">${label}</span>
+            <div class="result-city">${vLabel}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="tag ${tag}">${label}</span>
+              ${isOrg ? `<button class="add-vote-btn ${pinned?'active':''}"
+                onclick="Planning.toggleDateVoteOption('${w.startStr}','${endStr}','${vLabel}')">
+                ${pinned ? '✓ In Vote' : '+ Add to Vote'}
+              </button>` : ''}
+            </div>
           </div>
           <div class="t-muted t-small">${[...w.available].join(', ') || '—'}</div>
           <div class="vote-bar-bg" style="width:100%;margin-top:2px;"><div class="vote-bar-fill" style="width:${pct}%;background:${fill}"></div></div>
@@ -1818,7 +2641,8 @@ const Planning = {
       <div class="flex gap-8 mt-8">
         <button class="btn btn-brand" onclick="Planning.addLog()">+ Add Traveler</button>
         <button class="btn" onclick="Planning.next()">Next: Preferences →</button>
-      </div>`;
+      </div>
+      ${this.renderStepComments('logistics')}`;
   },
 
   updateLog(i, field, value) {
@@ -1883,7 +2707,8 @@ const Planning = {
       <div class="flex gap-8 mt-8">
         <button class="btn btn-brand" onclick="Planning.addPref()">+ Add Traveler</button>
         <button class="btn" onclick="Planning.next()">View Dashboard →</button>
-      </div>`;
+      </div>
+      ${this.renderStepComments('prefs')}`;
   },
 
   updatePref(i, field, value) {
@@ -1921,6 +2746,8 @@ const Planning = {
     const words   = prefs.map(p=>p.word).filter(Boolean).join(' · ') || '—';
     const topPri  = this.getMostCommonPriority();
     const top5    = this.scoreDestinationsCached().slice(0,5);
+    const sl      = State.activeTripMeta?.dest_shortlist || [];
+    const isOrg   = TripManager.isOrganizer();
     return `
       <div class="section-title">Group Preference Summary</div>
       <div class="stat-grid mb-16">
@@ -1929,9 +2756,11 @@ const Planning = {
         <div class="stat-card" style="grid-column:span 2;"><div class="stat-val" style="font-size:14px;font-style:italic;">${words}</div><div class="stat-lbl">Vacation Words</div></div>
         <div class="stat-card" style="grid-column:span 2;"><div class="stat-val" style="font-size:15px;">#1 Priority: ${topPri}</div><div class="stat-lbl">Group Consensus</div></div>
       </div>
-      <div class="section-title">Top 5 Destination Matches</div>
+      <div class="section-title">Top Destination Matches</div>
+      ${isOrg ? '<p class="t-muted t-small mb-8">Shortlist 2–3 destinations below to create the vote ballot — everyone will see results live.</p>' : ''}
       ${top5.map((s,i) => {
-        const tags = this.getMatchTags(s.d).map(t=>`<span class="tag tag-brand">${t}</span>`).join('');
+        const tags    = this.getMatchTags(s.d).map(t=>`<span class="tag tag-brand">${t}</span>`).join('');
+        const inSl    = sl.includes(s.city);
         return `<div class="match-card ${i===0?'top':''}">
           <div class="match-rank">${i+1}</div>
           <div style="flex:1;">
@@ -1939,10 +2768,42 @@ const Planning = {
             <div class="t-muted t-small">${s.country} · ${s.d.size}</div>
             <div class="flex gap-4 flex-wrap mt-8">${tags}</div>
           </div>
-          <div class="match-score">${Math.round(s.score)}<span class="t-muted" style="font-size:11px;">/100</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div class="match-score">${Math.round(s.score)}<span class="t-muted" style="font-size:11px;">/100</span></div>
+            ${isOrg
+              ? `<button class="sl-btn ${inSl?'active':''}" onclick="Planning.toggleDestShortlist('${s.city}')">
+                   ${inSl ? '✓ Shortlisted' : '+ Shortlist'}
+                 </button>`
+              : (inSl ? `<span class="tag tag-brand" style="font-size:9px;">Shortlisted</span>` : '')}
+          </div>
         </div>`;
       }).join('')}
-      <div class="mt-16"><button class="btn btn-brand" onclick="Planning.next()">Proceed to Vote →</button></div>`;
+      ${isOrg ? `
+        <div class="field-row mt-12" style="max-width:380px;">
+          <label class="field-label">Add a destination not in the list</label>
+          <div style="display:flex;gap:6px;">
+            <input class="field-input" type="text" id="custom-dest-input"
+              placeholder="e.g. Porto, Bruges, Reykjavik…" style="font-size:13px;"
+              onkeydown="if(event.key==='Enter') Planning.addCustomDestToShortlist()">
+            <button class="btn btn-sm btn-ghost" onclick="Planning.addCustomDestToShortlist()">+ Add</button>
+          </div>
+        </div>
+      ` : ''}
+      ${isOrg ? `
+        <div class="sl-status ${sl.length >= 2 ? 'ready' : ''} mt-8">
+          <strong>${sl.length}/3 shortlisted</strong>
+          ${sl.length >= 2
+            ? ` — <span style="color:var(--green)">Ready!</span> <a href="#" onclick="Planning.next();return false;" style="color:var(--brand);margin-left:4px;">Proceed to Vote →</a>`
+            : ' — Select 2–3 destinations to create the vote ballot.'}
+          ${sl.length > 0 ? `<div class="t-muted t-small mt-4">Shortlisted: ${sl.join(', ')}</div>` : ''}
+        </div>
+      ` : (sl.length >= 2 ? `
+        <div class="sl-status ready mt-8">
+          Organizer's vote shortlist: <strong>${sl.join(', ')}</strong>
+        </div>
+      ` : '')}
+      <div class="mt-16"><button class="btn btn-brand" onclick="Planning.next()">Proceed to Vote →</button></div>
+      ${this.renderStepComments('dashboard')}`;
   },
 
   getMostCommonPriority() {
@@ -1994,26 +2855,354 @@ const Planning = {
 
   getTopDest() { return this.scoreDestinationsCached()[0]?.city || 'Barcelona'; },
 
+  /* ── STEP COMMENTS ───────────────────────────────────────────── */
+  renderStepComments(stepKey) {
+    return `
+      <div class="sc-wrap" id="sc-wrap-${stepKey}">
+        <div class="sc-toggle" onclick="Planning.toggleComments('${stepKey}')">
+          <span class="sc-toggle-label">Discussion</span>
+          <span class="sc-toggle-arrow" id="sc-arr-${stepKey}">▾</span>
+        </div>
+        <div class="sc-body" id="sc-body-${stepKey}">
+          <div class="sc-msgs" id="sc-msgs-${stepKey}">
+            <div class="sc-empty">Loading…</div>
+          </div>
+          <div class="sc-input-row">
+            <input class="field-input" type="text" id="sc-in-${stepKey}" maxlength="200"
+              placeholder="Add a comment… (200 chars max)" style="font-size:12px;"
+              oninput="document.getElementById('sc-chr-${stepKey}').textContent=this.value.length+'/200'"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();Planning.sendComment('${stepKey}');}">
+            <button class="btn btn-sm btn-brand" onclick="Planning.sendComment('${stepKey}')">Post</button>
+          </div>
+          <div class="sc-char" id="sc-chr-${stepKey}">0/200</div>
+        </div>
+      </div>`;
+  },
+
+  async toggleComments(stepKey) {
+    const body = $('sc-body-' + stepKey);
+    const arr  = $('sc-arr-' + stepKey);
+    if (!body) return;
+    const opening = !body.classList.contains('open');
+    body.classList.toggle('open', opening);
+    if (arr) arr.textContent = opening ? '▴' : '▾';
+    if (opening) await this.loadAndRenderComments(stepKey);
+  },
+
+  async loadAndRenderComments(stepKey) {
+    const comments = await DB.loadStepComments(stepKey);
+    this.renderComments(stepKey, comments);
+  },
+
+  renderComments(stepKey, comments) {
+    const el = $('sc-msgs-' + stepKey);
+    if (!el) return;
+    if (!comments.length) {
+      el.innerHTML = '<div class="sc-empty">No comments yet — be first!</div>';
+      return;
+    }
+    el.innerHTML = comments.map(c => {
+      const isMe  = c.user_id === State.user?.id;
+      const col   = colorForUser(c.user_id || 'x');
+      const time  = c.sent_at
+        ? new Date(c.sent_at).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' })
+        : '';
+      const init  = (c.display_name || '?')[0].toUpperCase();
+      return `<div class="sc-msg ${isMe?'mine':''}">
+        <div class="sc-av" style="background:${col}22;color:${col};">${init}</div>
+        <div>
+          <div class="sc-meta">${c.display_name} · ${time}</div>
+          <div class="sc-bubble">${c.text}</div>
+        </div>
+      </div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  },
+
+  async sendComment(stepKey) {
+    const input = $('sc-in-' + stepKey);
+    const text  = input?.value.trim();
+    if (!text) return;
+    input.value = '';
+    const chr = $('sc-chr-' + stepKey);
+    if (chr) chr.textContent = '0/200';
+    try {
+      await DB.sendStepComment(stepKey, text);
+      await this.loadAndRenderComments(stepKey);
+    } catch(e) {
+      Toast.show('Could not post comment', 'error');
+      console.error(e);
+    }
+  },
+
+  /* ── DATE VOTE SECTION ──────────────────────────────────────── */
+  renderDateVoteSection() {
+    const opts  = State.activeTripMeta?.date_vote_options || [];
+    const round = State.activeTripMeta?.date_vote_round  || 1;
+    const votes = State.dateVotes;
+    const isOrg = TripManager.isOrganizer();
+    const total = votes.total || 0;
+    const myV   = votes.myVote;
+
+    if (!opts.length) {
+      return `<div class="dv-section">
+        <div class="section-title" style="margin-bottom:4px;">Date Vote</div>
+        <div class="dv-hint">${isOrg
+          ? 'Use the "Add to Vote" buttons above to set up to 3 date windows for the group to vote on.'
+          : 'The organizer hasn\'t pinned date options for voting yet.'}</div>
+      </div>`;
+    }
+
+    return `<div class="dv-section">
+      <div class="flex-between mb-8">
+        <div class="section-title" style="margin:0;">Date Vote</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${round > 1 ? `<span class="round-badge">Round ${round}</span>` : ''}
+          <span class="t-muted t-small">${total} vote${total!==1?'s':''} cast</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${opts.map((opt, i) => {
+          const count = votes.tally[i] || 0;
+          const pct   = total ? Math.round(count / total * 100) : 0;
+          const sel   = myV === i;
+          return `<div class="dv-opt ${sel?'selected':''}" onclick="Planning.submitDateVote(${i})">
+            <div style="flex:1;">
+              <div class="dv-opt-label">${opt.label}</div>
+              <div class="dv-opt-bar"><div class="dv-opt-bar-fill" style="width:${pct}%"></div></div>
+            </div>
+            <div class="dv-opt-tally">${count} vote${count!==1?'s':''} · ${pct}%${sel?' ✓':''}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${isOrg ? `
+        <div style="margin-top:10px;">
+          <button class="btn btn-sm btn-ghost" onclick="Planning.startNewDateRound()">Start New Round</button>
+          <p class="t-muted t-small mt-4">Results above are visible to all members. Start a new round to clear votes and pin fresh date options.</p>
+        </div>
+      ` : (myV === -1 ? '<p class="t-muted t-small mt-8">Click an option above to cast your vote.</p>' : '')}
+    </div>`;
+  },
+
+  async submitDateVote(idx) {
+    try {
+      await DB.saveDateVote(idx);
+      State.dateVotes = await DB.loadDateVotes();
+      this.gotoStep(State.currentStep);
+      Toast.show('Date vote saved — everyone can see it!', 'success', 1800);
+    } catch(e) {
+      Toast.show('Could not save vote', 'error');
+      console.error(e);
+    }
+  },
+
+  async startNewDateRound() {
+    if (!confirm('Start a new date voting round? Current votes will be cleared and you can pin fresh options.')) return;
+    const newRound = (State.activeTripMeta?.date_vote_round || 1) + 1;
+    await DB.updateTrip({ date_vote_options: [], date_vote_round: newRound });
+    await DB.resetDateVotes();
+    State.activeTripMeta = { ...State.activeTripMeta, date_vote_options: [], date_vote_round: newRound };
+    State.dateVotes = { tally: {}, total: 0, myVote: -1 };
+    Toast.show(`Round ${newRound} started — pin new date options above`, 'info', 2500);
+    this.gotoStep(State.currentStep);
+  },
+
+  async toggleDateVoteOption(startStr, endStr, label) {
+    const opts = [...(State.activeTripMeta?.date_vote_options || [])];
+    const idx  = opts.findIndex(o => o.startStr === startStr);
+    if (idx > -1) {
+      opts.splice(idx, 1);
+    } else if (opts.length >= 3) {
+      Toast.show('Maximum 3 date options allowed', 'info'); return;
+    } else {
+      opts.push({ startStr, endStr, label });
+    }
+    await DB.saveDateVoteOptions(opts);
+    Toast.show(idx > -1 ? 'Removed from vote' : 'Added to vote!', 'success', 1500);
+    this.gotoStep(State.currentStep);
+  },
+
+  /* ── DESTINATION SHORTLIST ──────────────────────────────────── */
+  async toggleDestShortlist(city) {
+    const sl  = [...(State.activeTripMeta?.dest_shortlist || [])];
+    const idx = sl.indexOf(city);
+    if (idx > -1) {
+      sl.splice(idx, 1);
+    } else if (sl.length >= 3) {
+      Toast.show('Maximum 3 destinations in shortlist', 'info'); return;
+    } else {
+      sl.push(city);
+    }
+    await DB.saveDestShortlist(sl);
+    this.gotoStep(4);
+  },
+
+  async addCustomDestToShortlist() {
+    const input = $('custom-dest-input');
+    const city  = input?.value.trim();
+    if (!city) return;
+    const sl = [...(State.activeTripMeta?.dest_shortlist || [])];
+    if (sl.map(s => s.toLowerCase()).includes(city.toLowerCase())) {
+      Toast.show('Already in shortlist', 'info'); return;
+    }
+    if (sl.length >= 3) {
+      Toast.show('Maximum 3 destinations in shortlist', 'info'); return;
+    }
+    sl.push(city);
+    if (input) input.value = '';
+    await DB.saveDestShortlist(sl);
+    this.gotoStep(4);
+  },
+
+  async startNewDestRound() {
+    if (!confirm('Start a new destination voting round? All current votes will be cleared and you\'ll pick a new shortlist.')) return;
+    try {
+      const newRound = (State.activeTripMeta?.dest_vote_round || 1) + 1;
+      await DB.saveDestShortlist([], newRound);
+      await DB.resetVotes();
+      State.votes = {};
+      State.voteComments = [];
+      Toast.show(`Round ${newRound} started — go to Dashboard and pick a new shortlist`, 'info', 3000);
+      this.gotoStep(4);
+    } catch(e) {
+      Toast.show('Failed to start new round', 'error');
+      console.error(e);
+    }
+  },
+
+  /* ── Organizer banner (top of Plan tab) ─────────────────────── */
+  renderOrgBanner() {
+    const meta = State.activeTripMeta;
+    if (!meta || meta.id === 'default') return '';
+    const organizer   = State.tripMembers.find(m => m.role === 'organizer');
+    const orgName     = organizer?.display_name || 'Organizer';
+    const deadline    = meta.response_deadline;
+    let deadlineTxt   = '', urgent = false;
+    if (deadline) {
+      const d = Math.ceil((new Date(deadline) - new Date()) / 86400000);
+      deadlineTxt = d > 0
+        ? `Respond by ${new Date(deadline+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})} · ${d} day${d!==1?'s':''} left`
+        : 'Response deadline has passed';
+      urgent = d <= 5;
+    }
+    const isOrg = TripManager.isOrganizer();
+    return `
+      <div class="organizer-banner">
+        <div class="ob-left">
+          <div class="ob-title">${meta.name}</div>
+          ${meta.organizer_message ? `<div class="ob-msg">"${meta.organizer_message}"</div>` : ''}
+        </div>
+        <div class="ob-right">
+          <div class="ob-by">Organised by</div>
+          <div style="font-size:13px;font-weight:500;color:white;">${orgName}</div>
+          ${deadline ? `<div class="ob-deadline${urgent?' urgent':''}">${deadlineTxt}</div>` : ''}
+          ${isOrg ? `<button class="btn btn-sm btn-ghost" style="margin-top:4px;color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.3);" onclick="TripManager.openSetupModal()">Trip Setup ⚙</button>` : ''}
+        </div>
+      </div>`;
+  },
+
+  /* ── Decision gate strip ────────────────────────────────────── */
+  renderGateStrip(type) {
+    const meta = State.activeTripMeta;
+    if (!meta) return '';
+    const isOrg    = TripManager.isOrganizer();
+    const deadline = meta[type + '_deadline'];
+    const closed   = meta[type + '_closed'];
+    const labels   = { availability:'Availability', destination:'Destination Vote', itinerary:'Itinerary' };
+
+    let responseInfo = '', progressPct = 0;
+    if (type === 'availability') {
+      const total = Math.max(State.tripMembers.length, 1);
+      progressPct = Math.round(State.availability.length / total * 100);
+      responseInfo = `${State.availability.length} of ${total} member${total!==1?'s':''} responded`;
+    } else if (type === 'destination') {
+      const totalVotes = Object.values(State.votes).reduce((a,b)=>a+b,0);
+      responseInfo = totalVotes ? `${totalVotes} vote${totalVotes!==1?'s':''} cast` : 'No votes yet';
+      progressPct  = State.tripMembers.length
+        ? Math.min(Math.round(totalVotes / State.tripMembers.length * 100), 100) : 0;
+    } else if (type === 'itinerary') {
+      if (State.tripConfig.start && State.tripConfig.end) {
+        const days   = getDays(State.tripConfig.start, State.tripConfig.end);
+        const filled = days.filter((_,i) => dayCompletionPct(State.itinerary[i] || {}) > 0).length;
+        progressPct  = days.length ? Math.round(filled / days.length * 100) : 0;
+        responseInfo = `${filled} of ${days.length} days started`;
+      }
+    }
+
+    const daysLeft = deadline ? Math.ceil((new Date(deadline+'T12:00:00Z') - new Date()) / 86400000) : null;
+    const urgent   = daysLeft !== null && daysLeft <= 3 && !closed;
+    const cls      = closed ? 'gate-closed' : urgent ? 'gate-urgent' : 'gate-open';
+
+    const statusHtml = closed
+      ? `<span style="color:var(--green);font-weight:600;">✓ Responses closed</span>`
+      : deadline
+        ? daysLeft > 0
+          ? `Due in <strong>${daysLeft} day${daysLeft!==1?'s':''}</strong>`
+          : `<span style="color:var(--brand);font-weight:600;">Deadline passed</span>`
+        : `<span class="t-muted">No deadline set</span>`;
+
+    const deadlineFmt = deadline
+      ? new Date(deadline+'T12:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short'})
+      : '';
+
+    const orgActions = isOrg ? `
+      <div class="gate-actions">
+        ${!closed
+          ? `<button class="btn btn-sm" onclick="TripManager.openSetupModal()">Set Deadlines ⚙</button>
+             <button class="btn btn-sm btn-ghost" onclick="TripManager.closeGate('${type}')">Close Gate</button>
+             <button class="btn btn-sm btn-ghost" onclick="TripManager.resetGate('${type}')">Reset & Restart</button>`
+          : `<button class="btn btn-sm btn-ghost" onclick="TripManager.reopenGate('${type}')">Reopen Gate</button>
+             <button class="btn btn-sm btn-ghost" onclick="TripManager.resetGate('${type}')">Reset & Restart</button>`
+        }
+      </div>` : '';
+
+    return `
+      <div class="gate-strip ${cls}">
+        <div class="gate-top">
+          <span class="gate-label">${labels[type]} Gate</span>
+          <span class="gate-status">${statusHtml}</span>
+        </div>
+        ${responseInfo ? `<div class="gate-deadline-txt">${responseInfo}${deadlineFmt ? ` · Due ${deadlineFmt}` : ''}</div>` : ''}
+        ${progressPct > 0 ? `<div class="gate-progress"><div class="gate-prog-fill" style="width:${progressPct}%"></div></div>` : ''}
+        ${orgActions}
+      </div>`;
+  },
+
   /* ── STEP 5: VOTE ──────────────────────────────────── */
   renderVote() {
-    const top5 = this.scoreDestinationsCached().slice(0,5);
+    const sl        = State.activeTripMeta?.dest_shortlist || [];
+    const round     = State.activeTripMeta?.dest_vote_round || 1;
+    const allScored = this.scoreDestinationsCached();
+    const candidates = sl.length >= 2
+      ? sl.map(city => allScored.find(s => s.city === city) || { city, country: State.destinations.find(d=>d.city===city)?.country||'', score:0, d:{} })
+      : allScored.slice(0, 5);
+    const usingShortlist = sl.length >= 2;
     return `
-      <div class="section-title">Cast Your Vote</div>
-      <p class="t-muted mb-12" style="font-size:13px;">Select your top 2 destinations. Your vote is saved instantly for everyone.</p>
+      ${this.renderGateStrip('destination')}
+      <div class="flex-between mb-4" style="align-items:center;">
+        <div class="section-title" style="margin:0;">Cast Your Vote</div>
+        ${round > 1 ? `<span class="round-badge">Round ${round}</span>` : ''}
+      </div>
+      <p class="t-muted mb-12" style="font-size:13px;">${usingShortlist
+        ? `Organizer's shortlist for Round ${round}: ${sl.length} destinations. Select your favourite — results are visible to everyone in real time.`
+        : 'Select your top 2 destinations. Votes are visible to everyone as they come in.'}</p>
       <div class="vote-grid">
-        ${top5.map((s,i) => `
+        ${candidates.map((s,i) => `
           <div class="vote-opt" id="vopt-${i}" onclick="Planning.toggleVote(${i},'${s.city}')">
             <span class="vote-check" id="vchk-${i}">✓</span>
             <div class="vote-city">${s.city}</div>
-            <div class="t-muted t-small">${s.country}</div>
-            <div class="t-small t-brand mt-8" style="font-weight:500;">${s.score}/100 match</div>
+            <div class="t-muted t-small">${s.country||''}</div>
+            ${s.score > 0
+              ? `<div class="t-small t-brand mt-8" style="font-weight:500;">${s.score}/100 match</div>`
+              : `<div class="t-small t-muted mt-8" style="font-style:italic;">Organizer's pick</div>`}
           </div>`).join('')}
       </div>
       <div class="field-row">
-        <label class="field-label">Comments</label>
-        <textarea class="field-input" id="vote-comment" rows="2" placeholder="Share your thoughts..."></textarea>
+        <label class="field-label">Comments (optional)</label>
+        <textarea class="field-input" id="vote-comment" rows="2" placeholder="Share your thoughts… visible to the whole group"></textarea>
       </div>
-      <button class="btn btn-brand" onclick="Planning.submitVote()">Submit Vote →</button>`;
+      <button class="btn btn-brand" onclick="Planning.submitVote()">Submit Vote →</button>
+      ${this.renderStepComments('vote')}`;
   },
 
   toggleVote(i, city) {
@@ -2043,42 +3232,70 @@ const Planning = {
 
   /* ── STEP 6: RESULTS ───────────────────────────────── */
   renderResults() {
-    const top5  = this.scoreDestinationsCached().slice(0,5);
-    const total = Object.values(State.votes).reduce((a,b)=>a+b,0) || 1;
-    const winner = top5[0]?.city || '—';
+    const sl         = State.activeTripMeta?.dest_shortlist || [];
+    const round      = State.activeTripMeta?.dest_vote_round || 1;
+    const allScored  = this.scoreDestinationsCached();
+    const candidates = sl.length >= 2
+      ? sl.map(city => allScored.find(s => s.city === city) || { city, country:'', score:0 })
+      : allScored.slice(0, 5);
+    const rawTotal   = Object.values(State.votes).reduce((a,b) => a+b, 0);
+    const totalVotes = rawTotal || 1;
+    const sorted     = [...candidates].sort((a,b) => (State.votes[b.city]||0) - (State.votes[a.city]||0));
+    const winner     = sorted[0]?.city || '—';
+    const isOrg      = TripManager.isOrganizer();
+    const memberCount = State.tripMembers.length || 1;
     return `
-      <div class="winner-banner">
-        <div style="font-size:28px;">★</div>
-        <div>
-          <div class="t-small t-upper" style="color:rgba(255,255,255,0.55);margin-bottom:3px;">Group's Choice</div>
-          <div class="winner-city">${winner}</div>
-        </div>
+      <div class="flex-between mb-8" style="align-items:center;">
+        <div style="font-size:12px;color:var(--muted);">Results visible to all ${memberCount} members</div>
+        ${round > 1 ? `<span class="round-badge">Round ${round}</span>` : ''}
       </div>
-      <div class="section-title">All Votes</div>
-      ${top5.map(s => {
+      ${rawTotal > 0 ? `
+        <div class="winner-banner">
+          <div style="font-size:28px;">★</div>
+          <div>
+            <div class="t-small t-upper" style="color:rgba(255,255,255,0.55);margin-bottom:3px;">Group's Choice</div>
+            <div class="winner-city">${winner}</div>
+          </div>
+        </div>
+      ` : `<div class="gate-strip gate-open mb-8"><p class="t-muted" style="font-size:13px;">No votes cast yet — results will appear here as members vote.</p></div>`}
+      <div class="section-title">All Votes · ${rawTotal} cast of ${memberCount} members</div>
+      ${sorted.map(s => {
         const v   = State.votes[s.city] || 0;
-        const pct = Math.round(v/total*100);
+        const pct = Math.round(v / totalVotes * 100);
         return `<div class="result-row">
           <div class="result-city">${s.city}</div>
           <div class="vote-bar-bg"><div class="vote-bar-fill" style="width:${pct}%"></div></div>
-          <div class="vote-pct">${pct}%</div>
+          <div class="vote-pct">${v} vote${v!==1?'s':''} · ${pct}%</div>
         </div>`;
       }).join('')}
       ${(State.voteComments||[]).length ? `
-        <div class="section-title mt-16">Participant Comments</div>
+        <div class="section-title mt-16">Vote Comments</div>
         ${(State.voteComments||[]).map(c => `
           <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 14px;">
             <div class="t-small t-upper t-muted">${c.name}</div>
             <div style="font-size:13px;font-style:italic;">"${c.text}"</div>
           </div>`).join('')}
       ` : ''}
-      <div class="mt-16"><button class="btn btn-brand" onclick="Planning.next()">Organizer Confirmation →</button></div>`;
+      ${isOrg ? `
+        <div class="gate-strip gate-open mt-16">
+          <div class="t-small t-upper t-muted mb-8">Organizer — Next Steps</div>
+          <p class="t-muted" style="font-size:12px;margin-bottom:12px;">
+            Results above are live and transparent to everyone. You can confirm the winner or run a new round with a fresh shortlist if the vote needs another pass.
+          </p>
+          <div class="flex gap-8 flex-wrap">
+            <button class="btn btn-brand" onclick="Planning.next()">Confirm Winner →</button>
+            <button class="btn btn-sm btn-ghost" onclick="Planning.startNewDestRound()">Start New Round</button>
+          </div>
+        </div>
+      ` : '<div class="mt-16"><button class="btn" onclick="Planning.next()">Organizer will confirm →</button></div>'}
+      ${this.renderStepComments('results')}`;
   },
 
   /* ── STEP 7: CONFIRM ───────────────────────────────── */
   renderConfirm() {
     const cfg = State.tripConfig;
     return `
+      ${this.renderGateStrip('destination')}
       <div class="section-title">Organizer — Final Confirmation</div>
       <div class="grid-2">
         <div class="field-row">
@@ -2104,7 +3321,8 @@ const Planning = {
       <div id="city-detail-panel" style="display:none;">
         <div class="section-title">City Overview &amp; Accommodation Options</div>
         <div id="city-detail-card"></div>
-      </div>`;
+      </div>
+      ${this.renderStepComments('confirm')}`;
   },
 
   async confirmTrip() {
@@ -2191,6 +3409,8 @@ const Itinerary = {
     $('iti-subtitle').textContent =
       `${cfg.dest} · ${fmtDate(days[0])} – ${fmtDate(days[days.length-1])} · ${days.length} days`;
     days.forEach((_,i) => initDayData(i));
+    const gateEl = $('iti-gate-strip');
+    if (gateEl) gateEl.innerHTML = Planning.renderGateStrip('itinerary');
   },
 
   refresh() {
