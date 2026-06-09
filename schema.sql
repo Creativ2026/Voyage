@@ -125,11 +125,9 @@ DROP POLICY IF EXISTS "invites_select" ON trip_invites;
 DROP POLICY IF EXISTS "invites_insert" ON trip_invites;
 DROP POLICY IF EXISTS "invites_update" ON trip_invites;
 
--- trips: read if you're a member OR it's the legacy 'default'
-CREATE POLICY "trips_select" ON trips FOR SELECT USING (
-  id = 'default'
-  OR id IN (SELECT trip_id FROM trip_members WHERE user_id = auth.uid())
-);
+-- trips: any authenticated user can read any trip (trip ID acts as invite code)
+CREATE POLICY "trips_select" ON trips FOR SELECT
+  USING (auth.uid() IS NOT NULL);
 
 -- trips: any authenticated user can create
 CREATE POLICY "trips_insert" ON trips FOR INSERT
