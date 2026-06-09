@@ -2178,6 +2178,7 @@ const App = {
     document.querySelectorAll('.nav-tab, .bottom-nav-btn').forEach(t => t.classList.remove('active'));
     $('page-' + page).classList.add('active');
     document.querySelectorAll(`[data-page="${page}"]`).forEach(t => t.classList.add('active'));
+    if (page === 'destinations') Destinations.init();
     if (page === 'planning')  TripManager.refreshBanner();
     if (page === 'itinerary') Itinerary.refresh();
     if (page === 'photos')    Photos.render();
@@ -2296,6 +2297,13 @@ const App = {
 ═══════════════════════════════════════════════════════════════ */
 const Destinations = {
   init() {
+    const search = $('dest-search');
+    const size   = $('dest-size');
+    const budget = $('dest-budget');
+    if (search) search.value = '';
+    if (size)   size.value   = '';
+    if (budget) budget.value = '';
+
     const seen = new Set();
     State.destinations = RAW_DESTINATIONS.filter(d => {
       const key = d.city + '|' + d.country;
