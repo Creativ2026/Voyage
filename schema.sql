@@ -155,10 +155,7 @@ CREATE POLICY "members_insert" ON trip_members FOR INSERT
 -- trip_members: self-leave OR organizer removes
 CREATE POLICY "members_delete" ON trip_members FOR DELETE USING (
   user_id = auth.uid()
-  OR trip_id IN (
-    SELECT trip_id FROM trip_members
-    WHERE user_id = auth.uid() AND role = 'organizer'
-  )
+  OR trip_id IN (SELECT id FROM trips WHERE organizer_id = auth.uid())
 );
 
 -- trip_invites: organizer or invitee can read
