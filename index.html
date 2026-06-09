@@ -835,7 +835,7 @@ textarea.field-input { resize: vertical; }
         <div id="trips-modal-body"></div>
         <div class="divider"></div>
         <div class="flex gap-8 mt-12">
-          <button class="btn btn-brand" onclick="TripManager.openNewTripModal()">+ New Trip</button>
+          <button class="btn btn-brand" id="new-trip-btn" onclick="TripManager.openNewTripModal()">+ New Trip</button>
           <button class="btn btn-ghost"  onclick="TripManager.openJoinModal()">Join a Trip</button>
         </div>
       </div>
@@ -1154,6 +1154,7 @@ const RAW_DESTINATIONS = [
 ═══════════════════════════════════════════════════════════════ */
 const State = {
   user:          null,
+  canOrganize:   false,       /* true if user's email is in allowed_organizers */
   activeTripId:  'default',   /* updated by TripManager.setActive() */
   activeTripMeta: null,       /* full trips row for the active trip  */
   trips:         [],          /* all trips this user belongs to       */
@@ -1764,6 +1765,8 @@ const TripManager = {
 
   openModal() {
     this.renderTripsModal();
+    const newTripBtn = $('new-trip-btn');
+    if (newTripBtn) newTripBtn.style.display = State.canOrganize ? '' : 'none';
     $('trips-modal').classList.add('open');
   },
 
@@ -2161,6 +2164,9 @@ const App = {
   },
 
   async boot() {
+    /* Check organizer permission once at boot */
+    State.canOrganize = await DB.isAllowedOrganizer(State.user.email);
+
     /* Resolve pending email invites and ?join= URL param */
     await TripManager.acceptPendingInvites();
     const joinCode = TripManager.checkJoinParam() || localStorage.getItem('voyage_pending_join');
