@@ -2118,13 +2118,8 @@ const Auth = {
   },
 
   async signOut() {
-    await sb.auth.signOut();
-    /* Fallback: manually reset UI if onAuthStateChange doesn't fire */
-    State.user = null;
-    $('login-screen').style.display = 'flex';
-    $('main-app').style.display     = 'none';
-    $('name-prompt').classList.remove('open');
-    App.teardown();
+    try { await sb.auth.signOut(); } catch(e) { console.error(e); }
+    window.location.reload();
   },
 
   /* Returns the best available display name for a user */
