@@ -587,8 +587,8 @@ textarea.field-input { resize: vertical; }
 <!-- ═══ NAME PROMPT (first sign-in only) ════════════════════ -->
 <div id="name-prompt">
   <div class="name-card">
-    <div class="name-card-title">Welcome to voyage<em style="color:var(--brand);font-style:italic;">.</em></div>
-    <p class="name-card-sub">
+    <div class="name-card-title" id="name-prompt-title">Welcome to voyage<em style="color:var(--brand);font-style:italic;">.</em></div>
+    <p class="name-card-sub" id="name-prompt-sub">
       What should we call you?<br>
       This name appears on your votes, itinerary entries, and in the group chat.
     </p>
@@ -598,8 +598,12 @@ textarea.field-input { resize: vertical; }
       style="font-size:15px;text-align:center;margin-bottom:12px;"
       onkeydown="if(event.key==='Enter') Auth.saveName()">
     <button class="btn btn-brand" style="width:100%;justify-content:center;"
-      onclick="Auth.saveName()">
+      id="name-prompt-btn" onclick="Auth.saveName()">
       Join the group
+    </button>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:8px;display:none;"
+      id="name-prompt-cancel" onclick="Auth.cancelEditName()">
+      Cancel
     </button>
     <p class="name-card-error" id="name-error"></p>
   </div>
@@ -660,7 +664,7 @@ textarea.field-input { resize: vertical; }
       <button class="nav-tab" data-page="chat" onclick="App.switchPage('chat',this)">Chat</button>
     </nav>
     <div class="header-right">
-      <div class="user-pill">
+      <div class="user-pill" onclick="Auth.editName()" title="Edit your name" style="cursor:pointer;">
         <div class="user-av" id="user-av">?</div>
         <span id="user-name">...</span>
       </div>
@@ -2068,7 +2072,7 @@ const Auth = {
     $('login-error').textContent = '';
   },
 
-  /* Called when user submits the name prompt on first sign-in */
+  /* Called when user submits the name prompt (first sign-in or edit) */
   async saveName() {
     const name = $('name-input').value.trim();
     if (!name) {
@@ -2078,27 +2082,49 @@ const Auth = {
     $('name-error').textContent = '';
 
     try {
-      /* Store name in Supabase auth user metadata — no extra table needed */
-      const { error } = await sb.auth.updateUser({
-        data: { display_name: name }
-      });
+      const { error } = await sb.auth.updateUser({ data: { display_name: name } });
       if (error) throw error;
 
-      /* Update local user object so the rest of the app sees the name immediately */
       State.user.user_metadata = { ...State.user.user_metadata, display_name: name };
-
-      /* Close prompt, update header, boot app */
       $('name-prompt').classList.remove('open');
       this.updateUserUI(State.user);
-      await App.boot();
+
+      if (this._editingName) {
+        this._editingName = false;
+      } else {
+        await App.boot();
+      }
     } catch(e) {
       $('name-error').textContent = 'Could not save name. Please try again.';
       console.error(e);
     }
   },
 
+  editName() {
+    this._editingName = true;
+    $('name-prompt-title').textContent = 'Edit your name';
+    $('name-prompt-sub').textContent = 'This name appears on your votes, itinerary entries, and in the group chat.';
+    $('name-prompt-btn').textContent = 'Save';
+    $('name-prompt-cancel').style.display = '';
+    $('name-input').value = this.displayName(State.user);
+    $('name-error').textContent = '';
+    $('name-prompt').classList.add('open');
+    $('name-input').select();
+  },
+
+  cancelEditName() {
+    this._editingName = false;
+    $('name-prompt').classList.remove('open');
+  },
+
   async signOut() {
     await sb.auth.signOut();
+    /* Fallback: manually reset UI if onAuthStateChange doesn't fire */
+    State.user = null;
+    $('login-screen').style.display = 'flex';
+    $('main-app').style.display     = 'none';
+    $('name-prompt').classList.remove('open');
+    App.teardown();
   },
 
   /* Returns the best available display name for a user */
