@@ -1848,7 +1848,7 @@ const TripManager = {
     /* Duration buttons */
     const dur = meta.trip_duration || 5;
     const db  = $('setup-dur-btns');
-    if (db) db.innerHTML = [3,4,5,6,7,10,14].map(n =>
+    if (db) db.innerHTML = [2,3,4,5,6].map(n =>
       `<button class="dur-btn ${dur===n?'active':''}" onclick="TripManager.setSetupDuration(${n})">${n} nights</button>`
     ).join('');
     /* Gate deadlines */
@@ -2414,7 +2414,7 @@ const Planning = {
       <div class="field-row mb-16">
         <label class="field-label">Trip duration (nights)</label>
         <div class="cal-dur-btns">
-          ${[3,4,5,6,7,10,14].map(n => `<button class="dur-btn ${dur===n?'active':''}" onclick="Planning.setDuration(${n})">${n} nights</button>`).join('')}
+          ${[2,3,4,5,6].map(n => `<button class="dur-btn ${dur===n?'active':''}" onclick="Planning.setDuration(${n})">${n} nights</button>`).join('')}
         </div>
       </div>
 
