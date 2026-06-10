@@ -1009,6 +1009,7 @@ textarea.field-input { resize: vertical; }
     </div>
   </div>
 
+<div style="text-align:center;padding:8px 0 16px;font-size:10px;color:#CCC;letter-spacing:.05em;">v20260610</div>
 </div><!-- /main-app -->
 
 <div id="toast-container"></div>
@@ -2452,7 +2453,9 @@ const Destinations = {
   },
 
   render(list) {
-    $('dest-grid').innerHTML = list.map(d => {
+    const grid = $('dest-grid');
+    if (!grid) { console.error('dest-grid element not found'); return; }
+    grid.innerHTML = list.map(d => {
       const idx  = State.destinations.indexOf(d);
       const bars = DIMS.map(k =>
         `<div class="mini-bar-row">
@@ -2518,7 +2521,9 @@ const Planning = {
   init() {
     const banner = $('organizer-banner');
     if (banner) banner.innerHTML = this.renderOrgBanner();
-    $('step-nav').innerHTML = STEPS.map((s,i) =>
+    const nav = $('step-nav');
+    if (!nav) { console.error('step-nav element not found'); return; }
+    nav.innerHTML = STEPS.map((s,i) =>
       `<button class="step-tab" id="stab-${i+1}" onclick="Planning.gotoStep(${i+1})">
          <span class="step-num">${i+1}</span>${s.label}
        </button>`
