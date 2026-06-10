@@ -2121,12 +2121,19 @@ const Auth = {
   },
 
   async signOut() {
+    /* Reset UI immediately — no page reload needed */
     this._bootedUserId = null;
+    State.user = null;
+    $('main-app').style.display    = 'none';
+    $('login-screen').style.display = 'flex';
+    $('name-prompt').classList.remove('open');
+    this.resetLoginForm();
+    App.teardown();
+    /* Clear session in the background */
     try { await sb.auth.signOut(); } catch(e) { console.error(e); }
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('sb-')) localStorage.removeItem(k);
     });
-    window.location.href = window.location.pathname;
   },
 
   /* Returns the best available display name for a user */
