@@ -279,11 +279,12 @@ textarea.field-input { resize: vertical; }
 .cal-instruction strong { font-weight: 600; }
 #avail-calendar { width: 100%; }
 .cal-months   { display: block; margin: 14px 0; }
-.cal-month    { display: block; margin-bottom: 32px; padding-bottom: 4px; }
-.cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
-.cal-grid     { display: table; width: 100%; border-collapse: collapse; table-layout: fixed; border-spacing: 0; }
+.cal-month    { display: block; margin-bottom: 24px; padding: 12px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg); }
+.cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--ink); }
+.cal-grid     { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; }
-.cal-day      { text-align: center; vertical-align: middle; font-size: 11px; padding: 7px 2px; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; transition: background 0.12s, border-color 0.12s; }
+.cal-empty    { height: 30px; }
+.cal-day      { display: block; text-align: center; font-size: 11px; padding: 6px 2px; height: 30px; box-sizing: border-box; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; cursor: default; transition: background 0.12s, border-color 0.12s; }
 .cal-day.in-window { cursor: pointer; }
 .cal-day.in-window:hover { border-color: var(--brand); background: var(--brand-light); }
 .cal-day.cal-mine { background: var(--brand); color: white; font-weight: 600; cursor: pointer; }
@@ -2632,12 +2633,12 @@ const Planning = {
       const lastDay  = new Date(y, m + 1, 0).getDate();
       const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; /* Mon=0 */
 
-      /* Header row */
-      const headerRow = '<tr>' + DHDRS.map(h => `<th class="cal-hdr">${h}</th>`).join('') + '</tr>';
+      /* 7 header spans */
+      const headers = DHDRS.map(h => `<span class="cal-hdr">${h}</span>`).join('');
 
-      /* Build flat list of <td> cells, then chunk into rows of 7 */
-      const tds = [];
-      for (let i = 0; i < firstDow; i++) tds.push('<td></td>');
+      /* Flat list of day + empty spans — CSS Grid lays these into 7 columns */
+      const cells = [];
+      for (let i = 0; i < firstDow; i++) cells.push('<span class="cal-empty"></span>');
 
       for (let day = 1; day <= lastDay; day++) {
         const d    = new Date(y, m, day);
@@ -2659,20 +2660,14 @@ const Planning = {
         const click = inW ? `onclick="Planning.toggleDate('${dStr}')"` : '';
         const badge = inW && cnt && !mine ? `<span class="cal-cnt">${cnt}</span>` : '';
 
-        tds.push(`<td class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</td>`);
+        cells.push(`<span class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</span>`);
       }
 
-      /* Trailing empty cells to complete the last row */
-      const trailing = (7 - (tds.length % 7)) % 7;
-      for (let i = 0; i < trailing; i++) tds.push('<td></td>');
+      /* Trailing empty spans to fill the last row */
+      const trailing = (7 - (cells.length % 7)) % 7;
+      for (let i = 0; i < trailing; i++) cells.push('<span class="cal-empty"></span>');
 
-      /* Chunk into <tr> rows of 7 */
-      const bodyRows = [];
-      for (let i = 0; i < tds.length; i += 7) {
-        bodyRows.push('<tr>' + tds.slice(i, i + 7).join('') + '</tr>');
-      }
-
-      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><table class="cal-grid"><thead>${headerRow}</thead><tbody>${bodyRows.join('')}</tbody></table></div>`;
+      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><div class="cal-grid">${headers}${cells.join('')}</div></div>`;
     }).join('');
 
     return `<div class="cal-months">${html}</div>`;
