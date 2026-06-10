@@ -1030,7 +1030,8 @@ textarea.field-input { resize: vertical; }
 const { createClient } = supabase;
 const sb = createClient(
   'https://czrujgsqjticquugeeyw.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnVqZ3NxanRpY3F1dWdlZXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDIyNTQsImV4cCI6MjA5MzAxODI1NH0.PAmYZCdS8FpsEYYNXazE5A2l-ss1DU206ob5GauYg7E'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN6cnVqZ3NxanRpY3F1dWdlZXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDIyNTQsImV4cCI6MjA5MzAxODI1NH0.PAmYZCdS8FpsEYYNXazE5A2l-ss1DU206ob5GauYg7E',
+  { auth: { flowType: 'implicit' } }
 );
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2226,6 +2227,8 @@ const Auth = {
         State.user = session.user;
         $('login-screen').style.display = 'none';
         $('main-app').style.display     = 'block';
+        /* Render cities immediately so destinations page is never blank */
+        try { Destinations.init(); } catch(e) {}
 
         const hasName = !!session.user.user_metadata?.display_name;
 
