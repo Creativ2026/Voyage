@@ -605,6 +605,10 @@ textarea.field-input { resize: vertical; }
       id="name-prompt-cancel" onclick="Auth.cancelEditName()">
       Cancel
     </button>
+    <button class="btn" style="width:100%;justify-content:center;margin-top:6px;display:none;color:var(--muted);font-size:12px;border-color:var(--border);"
+      id="name-prompt-signout" onclick="Auth.signOut()">
+      Sign out
+    </button>
     <p class="name-card-error" id="name-error"></p>
   </div>
 </div>
@@ -2090,6 +2094,7 @@ const Auth = {
 
       State.user.user_metadata = { ...State.user.user_metadata, display_name: name };
       $('name-prompt').classList.remove('open');
+      $('name-prompt-signout').style.display = 'none';
       this.updateUserUI(State.user);
 
       if (this._editingName) {
@@ -2109,6 +2114,7 @@ const Auth = {
     $('name-prompt-sub').textContent = 'This name appears on your votes, itinerary entries, and in the group chat.';
     $('name-prompt-btn').textContent = 'Save';
     $('name-prompt-cancel').style.display = '';
+    $('name-prompt-signout').style.display = '';
     $('name-input').value = this.displayName(State.user);
     $('name-error').textContent = '';
     $('name-prompt').classList.add('open');
@@ -2117,6 +2123,7 @@ const Auth = {
 
   cancelEditName() {
     this._editingName = false;
+    $('name-prompt-signout').style.display = 'none';
     $('name-prompt').classList.remove('open');
   },
 
