@@ -278,13 +278,13 @@ textarea.field-input { resize: vertical; }
 .cal-instruction { background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: #0C447C; }
 .cal-instruction strong { font-weight: 600; }
 #avail-calendar { width: 100%; }
-.cal-months   { display: block; margin: 14px 0; }
-.cal-month    { display: block; margin-bottom: 24px; padding: 12px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg); }
-.cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--ink); }
-.cal-grid     { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; }
-.cal-empty    { height: 30px; }
-.cal-day      { display: block; text-align: center; font-size: 11px; padding: 6px 2px; height: 30px; box-sizing: border-box; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; cursor: default; transition: background 0.12s, border-color 0.12s; }
+.cal-months      { display: block; margin: 14px 0; }
+.cal-month       { display: block; margin-bottom: 24px; padding: 12px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg); }
+.cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+.cal-week-row    { display: flex; width: 100%; }
+.cal-hdr         { flex: 0 0 14.2857%; width: 14.2857%; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; box-sizing: border-box; }
+.cal-empty       { flex: 0 0 14.2857%; width: 14.2857%; height: 30px; box-sizing: border-box; }
+.cal-day         { flex: 0 0 14.2857%; width: 14.2857%; text-align: center; font-size: 11px; padding: 6px 1px; height: 30px; box-sizing: border-box; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; cursor: default; transition: background 0.12s, border-color 0.12s; }
 .cal-day.in-window { cursor: pointer; }
 .cal-day.in-window:hover { border-color: var(--brand); background: var(--brand-light); }
 .cal-day.cal-mine { background: var(--brand); color: white; font-weight: 600; cursor: pointer; }
@@ -2638,10 +2638,10 @@ const Planning = {
       const lastDay  = new Date(y, m + 1, 0).getDate();
       const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; /* Mon=0 */
 
-      /* 7 header spans */
-      const headers = DHDRS.map(h => `<span class="cal-hdr">${h}</span>`).join('');
+      /* Header row */
+      const headerRow = `<div class="cal-week-row">${DHDRS.map(h=>`<span class="cal-hdr">${h}</span>`).join('')}</div>`;
 
-      /* Flat list of day + empty spans — CSS Grid lays these into 7 columns */
+      /* Build flat list of cells then chunk into week rows of 7 */
       const cells = [];
       for (let i = 0; i < firstDow; i++) cells.push('<span class="cal-empty"></span>');
 
@@ -2668,11 +2668,17 @@ const Planning = {
         cells.push(`<span class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</span>`);
       }
 
-      /* Trailing empty spans to fill the last row */
+      /* Trailing empty cells to complete the last week */
       const trailing = (7 - (cells.length % 7)) % 7;
       for (let i = 0; i < trailing; i++) cells.push('<span class="cal-empty"></span>');
 
-      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><div class="cal-grid">${headers}${cells.join('')}</div></div>`;
+      /* Each group of 7 cells becomes its own flex row — months cannot bleed into each other */
+      const weekRows = [];
+      for (let i = 0; i < cells.length; i += 7) {
+        weekRows.push(`<div class="cal-week-row">${cells.slice(i,i+7).join('')}</div>`);
+      }
+
+      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div>${headerRow}${weekRows.join('')}</div>`;
     }).join('');
 
     return `<div class="cal-months">${html}</div>`;
