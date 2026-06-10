@@ -2229,8 +2229,9 @@ const Auth = {
         State.user = session.user;
         $('login-screen').style.display = 'none';
         $('main-app').style.display     = 'block';
-        /* Render cities immediately so destinations page is never blank */
+        /* Render both pages immediately — never blank regardless of async failures */
         try { Destinations.init(); } catch(e) {}
+        try { Planning.init();     } catch(e) {}
 
         const hasName = !!session.user.user_metadata?.display_name;
 
@@ -4093,6 +4094,12 @@ const Chat = {
 /* ═══════════════════════════════════════════════════════════════
    BOOTSTRAP
 ═══════════════════════════════════════════════════════════════ */
+window.addEventListener('unhandledrejection', e => {
+  const msg = e.reason?.message || String(e.reason) || 'Unknown error';
+  console.error('Unhandled rejection:', msg);
+  Toast.show('Error: ' + msg.substring(0, 80), 'error');
+});
+
 Auth.init();
 
 </script>
