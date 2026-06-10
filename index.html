@@ -2272,8 +2272,11 @@ const App = {
   },
 
   async boot() {
-    /* Render destinations immediately so cities always appear on load */
-    Destinations.init();
+    /* Restore last page and render cities immediately, before any async work */
+    const lastPage = localStorage.getItem('voyage_active_page') || 'planning';
+    const validPages = ['destinations','planning','itinerary','photos','chat'];
+    this.switchPage(validPages.includes(lastPage) ? lastPage : 'planning');
+    Destinations.init(); /* ensure cities always visible regardless of active page */
 
     /* Check organizer permission once at boot */
     State.canOrganize = await DB.isAllowedOrganizer(State.user.email);
@@ -2299,12 +2302,9 @@ const App = {
     TripManager.renderSwitcher();
 
     await this.reloadTripData();
-    Destinations.init();
     Planning.init();
 
-    /* Restore the last page the user was viewing */
-    const lastPage = localStorage.getItem('voyage_active_page') || 'planning';
-    const validPages = ['destinations','planning','itinerary','photos','chat'];
+    /* Re-show the restored page now that trip data is loaded */
     this.switchPage(validPages.includes(lastPage) ? lastPage : 'planning');
   },
 
