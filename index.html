@@ -2059,11 +2059,9 @@ const Auth = {
       options: { emailRedirectTo: redirectTo }
     });
 
-    if (error) {
-      $('login-error').textContent = 'Could not send email. Please try again.';
-      console.error(error);
-      return;
-    }
+    /* Supabase sometimes returns a rate-limit error but still sends the email.
+       Always show the "link sent" screen so the user doesn't get a false error. */
+    if (error) console.error('OTP error (email may still have been sent):', error);
 
     $('login-email-display').textContent = email;
     $('login-email-form').style.display  = 'none';
@@ -2123,8 +2121,8 @@ const Auth = {
   },
 
   async signOut() {
+    this._bootedUserId = null;
     try { await sb.auth.signOut(); } catch(e) { console.error(e); }
-    /* Manually clear Supabase session from localStorage so reload lands on login */
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith('sb-')) localStorage.removeItem(k);
     });
@@ -2151,6 +2149,10 @@ const Auth = {
       $('app-loading').style.display = 'none';
 
       if (session?.user) {
+        /* Prevent re-booting if already booted for this user session */
+        if (this._bootedUserId === session.user.id) return;
+        this._bootedUserId = session.user.id;
+
         State.user = session.user;
         $('login-screen').style.display = 'none';
         $('main-app').style.display     = 'block';
@@ -2165,9 +2167,12 @@ const Auth = {
           $('name-input').select();
         } else {
           this.updateUserUI(session.user);
-          await App.boot();
+          try { await App.boot(); } catch(e) { console.error('Boot error:', e); }
         }
       } else {
+        /* Ignore SIGNED_OUT if we are mid-boot (Supabase fires it briefly
+           during magic-link token exchange before firing SIGNED_IN) */
+        if (this._bootedUserId) return;
         State.user = null;
         $('login-screen').style.display = 'flex';
         $('main-app').style.display     = 'none';
@@ -2195,6 +2200,9 @@ const App = {
   },
 
   async boot() {
+    /* Render destinations immediately so cities always appear on load */
+    Destinations.init();
+
     /* Check organizer permission once at boot */
     State.canOrganize = await DB.isAllowedOrganizer(State.user.email);
 
