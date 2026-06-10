@@ -278,8 +278,8 @@ textarea.field-input { resize: vertical; }
 .cal-instruction { background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: #0C447C; }
 .cal-instruction strong { font-weight: 600; }
 #avail-calendar { width: 100%; overflow: hidden; }
-.cal-months   { display: flex; gap: 28px; flex-wrap: wrap; margin: 14px 0; }
-.cal-month    { min-width: 216px; flex: 1; }
+.cal-months   { display: flex; flex-direction: column; gap: 20px; margin: 14px 0; }
+.cal-month    { min-width: 0; }
 .cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
 .cal-grid     { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; width: 100%; }
 .cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 4px; }
@@ -498,9 +498,7 @@ textarea.field-input { resize: vertical; }
   .stat-grid       { grid-template-columns: 1fr 1fr; }
   .vote-grid       { grid-template-columns: 1fr 1fr; }
 
-  /* Calendar → vertical stack, full width */
-  .cal-months  { flex-direction: column; gap: 20px; width: 100%; }
-  .cal-month   { width: 100%; min-width: 0; flex: none; }
+  /* Calendar mobile tweaks */
   .cal-grid    { gap: 1px; }
   .cal-day     { font-size: 10px; }
   .cal-hdr     { font-size: 8px; letter-spacing: 0; }
@@ -637,16 +635,34 @@ textarea.field-input { resize: vertical; }
       <p class="login-note">We'll email you a sign-in link — no password needed.</p>
     </div>
 
-    <!-- State B: link sent -->
+    <!-- State B: link sent + OTP entry -->
     <div id="login-link-sent" style="display:none;">
       <div style="font-size:32px;margin-bottom:12px;">✉</div>
       <div style="font-size:15px;font-weight:500;margin-bottom:8px;">Check your inbox</div>
       <p class="login-note">
-        We sent a sign-in link to <strong id="login-email-display"></strong>.
-        Click it to open the app — works on any device.
+        We sent a sign-in email to <strong id="login-email-display"></strong>.
+        It contains a 6-digit code and a sign-in link — use whichever is faster.
       </p>
+      <div style="margin-top:16px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Enter the 6-digit code</label>
+        <div style="display:flex;gap:8px;align-items:stretch;">
+          <input class="field-input" type="text" id="login-otp"
+            placeholder="000000"
+            maxlength="6"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="one-time-code"
+            style="text-align:center;font-size:22px;letter-spacing:6px;flex:1;min-width:0;"
+            onkeydown="if(event.key==='Enter') Auth.verifyOtp()">
+          <button class="btn btn-brand" onclick="Auth.verifyOtp()">Verify</button>
+        </div>
+        <p id="login-otp-error" class="login-error" style="margin-top:6px;"></p>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);text-align:center;">
+        Or click the sign-in link in the email
+      </div>
       <button class="btn btn-ghost btn-sm"
-        style="margin-top:16px;width:100%;justify-content:center;"
+        style="margin-top:12px;width:100%;justify-content:center;"
         onclick="Auth.resetLoginForm()">
         Use a different email
       </button>
@@ -2072,9 +2088,42 @@ const Auth = {
        Always show the "link sent" screen so the user doesn't get a false error. */
     if (error) console.error('OTP error (email may still have been sent):', error);
 
+    Auth._otpEmail = email;
     $('login-email-display').textContent = email;
     $('login-email-form').style.display  = 'none';
     $('login-link-sent').style.display   = 'block';
+    if ($('login-otp')) $('login-otp').value = '';
+  },
+
+  async verifyOtp() {
+    const email = Auth._otpEmail || $('login-email').value.trim();
+    const code  = ($('login-otp').value || '').replace(/\D/g, '');
+
+    $('login-otp-error').textContent = '';
+
+    if (!email) {
+      $('login-otp-error').textContent = 'Session expired — please re-enter your email.';
+      Auth.resetLoginForm();
+      return;
+    }
+    if (code.length !== 6) {
+      $('login-otp-error').textContent = 'Please enter the full 6-digit code from your email.';
+      return;
+    }
+
+    const btn = document.querySelector('#login-link-sent .btn-brand');
+    if (btn) { btn.disabled = true; btn.textContent = 'Verifying…'; }
+
+    const { error } = await sb.auth.verifyOtp({ email, token: code, type: 'email' });
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Verify'; }
+
+    if (error) {
+      console.error('OTP verify error:', error);
+      $('login-otp-error').textContent = 'Invalid or expired code. Double-check the digits, or request a new email.';
+      return;
+    }
+    /* Success: onAuthStateChange fires and handles the rest */
   },
 
   resetLoginForm() {
@@ -2082,6 +2131,8 @@ const Auth = {
     $('login-link-sent').style.display  = 'none';
     $('login-email').value = '';
     $('login-error').textContent = '';
+    if ($('login-otp')) { $('login-otp').value = ''; $('login-otp-error').textContent = ''; }
+    Auth._otpEmail = null;
   },
 
   /* Called when user submits the name prompt (first sign-in or edit) */
@@ -2578,6 +2629,10 @@ const Planning = {
 
         cells += `<div class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</div>`;
       }
+
+      /* Trailing blank cells so each month grid fills complete 7-column rows */
+      const trailing = (7 - ((firstDow + lastDay) % 7)) % 7;
+      for (let i = 0; i < trailing; i++) cells += '<div></div>';
 
       return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><div class="cal-grid">${cells}</div></div>`;
     }).join('');
