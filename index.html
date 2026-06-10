@@ -1295,15 +1295,20 @@ const DB = {
   },
 
   /* ── Logistics ──────────────────────────────────────── */
-  async saveLogistics(rows) {
-    /* Delete all then re-insert — keeps it simple for small groups */
-    await sb.from('logistics').delete().eq('trip_id', State.activeTripId);
-    if (rows.length) {
-      const { error } = await sb.from('logistics').insert(
-        rows.map(r => ({ ...r, trip_id: State.activeTripId, user_id: State.user?.id }))
-      );
-      if (error) throw error;
-    }
+  async saveMyLogistics(row) {
+    /* Each user owns exactly one logistics row per trip */
+    await sb.from('logistics').delete()
+      .eq('trip_id', State.activeTripId).eq('user_id', State.user.id);
+    const { error } = await sb.from('logistics').insert({
+      trip_id: State.activeTripId,
+      user_id: State.user.id,
+      name: Auth.displayName(State.user),
+      departure_from: row.departure_from || '',
+      travel_mode:    row.travel_mode    || 'Air',
+      travel_booked:  row.travel_booked  || false,
+      hotel_booked:   row.hotel_booked   || false
+    });
+    if (error) throw error;
   },
 
   async loadLogistics() {
@@ -2725,65 +2730,84 @@ const Planning = {
 
   /* ── STEP 2: LOGISTICS ─────────────────────────────── */
   renderLogistics() {
-    const list = State.logistics.length ? State.logistics
-      : [{ name:'', departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false }];
+    const myName = Auth.displayName(State.user);
+    const myRow  = State.logistics.find(r => r.user_id === State.user?.id)
+                || { departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false };
+    const others = State.logistics.filter(r => r.user_id !== State.user?.id);
+    const av = (i) => `background:${AVATARS[i%8]}22;color:${AVATARS[i%8]};`;
+
     return `
-      <div class="section-title">Travel Logistics per Participant</div>
-      <p class="t-muted mb-12" style="font-size:13px;">Saved live for the whole group the moment you change anything.</p>
-      ${list.map((l,i) => `
-        <div class="traveler-card">
-          <div class="flex-center gap-8 mb-12">
-            <div class="t-avatar" style="background:${AVATARS[i%8]}22;color:${AVATARS[i%8]};">${(l.name||'?')[0].toUpperCase()}</div>
-            <input class="t-name-input" value="${l.name||''}" placeholder="Name"
-              onchange="Planning.updateLog(${i},'name',this.value)">
+      <div class="section-title">Your Travel Details</div>
+      <p class="t-muted mb-12" style="font-size:13px;">Saved live and visible to the whole group.</p>
+      <div class="traveler-card">
+        <div class="flex-center gap-8 mb-12">
+          <div class="t-avatar" style="${av(0)}">${myName[0].toUpperCase()}</div>
+          <span style="font-weight:600;font-size:14px;">${myName}</span>
+        </div>
+        <div class="grid-2">
+          <div class="field-row">
+            <label class="field-label">Departing from</label>
+            <input class="field-input" value="${myRow.departure_from||''}" placeholder="City, Country"
+              onchange="Planning.updateMyLog('departure_from',this.value)">
           </div>
-          <div class="grid-2">
-            <div class="field-row">
-              <label class="field-label">Departing from</label>
-              <input class="field-input" value="${l.departure_from||''}" placeholder="City, Country"
-                onchange="Planning.updateLog(${i},'departure_from',this.value)">
-            </div>
-            <div class="field-row">
-              <label class="field-label">Mode of Travel</label>
-              <div class="flex gap-4 mt-8">
-                ${['Air','Train','Car','Other'].map(m =>
-                  `<button class="mode-btn ${l.travel_mode===m?'active':''}"
-                     onclick="Planning.updateLog(${i},'travel_mode','${m}');Planning.gotoStep(2)">${m}</button>`
-                ).join('')}
-              </div>
+          <div class="field-row">
+            <label class="field-label">Mode of Travel</label>
+            <div class="flex gap-4 mt-8">
+              ${['Air','Train','Car','Other'].map(m =>
+                `<button class="mode-btn ${myRow.travel_mode===m?'active':''}"
+                   onclick="Planning.updateMyLog('travel_mode','${m}')">${m}</button>`
+              ).join('')}
             </div>
           </div>
-          <div class="flex gap-16 mt-8">
-            <label class="booking-check">
-              <input type="checkbox" ${l.travel_booked?'checked':''}
-                onchange="Planning.updateLog(${i},'travel_booked',this.checked)">
-              Travel booked
-            </label>
-            <label class="booking-check">
-              <input type="checkbox" ${l.hotel_booked?'checked':''}
-                onchange="Planning.updateLog(${i},'hotel_booked',this.checked)">
-              Hotel booked
-            </label>
-          </div>
-        </div>`).join('')}
+        </div>
+        <div class="flex gap-16 mt-8">
+          <label class="booking-check">
+            <input type="checkbox" ${myRow.travel_booked?'checked':''}
+              onchange="Planning.updateMyLog('travel_booked',this.checked)">
+            Travel booked
+          </label>
+          <label class="booking-check">
+            <input type="checkbox" ${myRow.hotel_booked?'checked':''}
+              onchange="Planning.updateMyLog('hotel_booked',this.checked)">
+            Hotel booked
+          </label>
+        </div>
+      </div>
+      ${others.length ? `
+        <div class="section-title mt-16">Other Travellers</div>
+        ${others.map((r,i) => `
+          <div class="traveler-card" style="opacity:0.85;">
+            <div class="flex-center gap-8 mb-8">
+              <div class="t-avatar" style="${av(i+1)}">${(r.name||'?')[0].toUpperCase()}</div>
+              <span style="font-weight:600;font-size:14px;">${r.name||'Traveler'}</span>
+            </div>
+            <div class="grid-2" style="font-size:13px;color:var(--muted);">
+              <div><span class="field-label">From</span><br>${r.departure_from||'—'}</div>
+              <div><span class="field-label">Mode</span><br>${r.travel_mode||'—'}</div>
+            </div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px;">
+              ${r.travel_booked?'✓ Travel booked':'⏳ Travel not booked'} &nbsp;·&nbsp;
+              ${r.hotel_booked?'✓ Hotel booked':'⏳ Hotel not booked'}
+            </div>
+          </div>`).join('')}
+      ` : ''}
       <div class="flex gap-8 mt-8">
-        <button class="btn btn-brand" onclick="Planning.addLog()">+ Add Traveler</button>
         <button class="btn" onclick="Planning.next()">Next: Preferences →</button>
       </div>
       ${this.renderStepComments('logistics')}`;
   },
 
-  updateLog(i, field, value) {
-    if (!State.logistics[i]) State.logistics[i] = {};
-    State.logistics[i][field] = value;
-    DB.saveLogistics(State.logistics)
+  updateMyLog(field, value) {
+    let myRow = State.logistics.find(r => r.user_id === State.user?.id);
+    if (!myRow) {
+      myRow = { user_id: State.user.id, departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false };
+      State.logistics.push(myRow);
+    }
+    myRow[field] = value;
+    if (field === 'travel_mode') this.gotoStep(2);
+    DB.saveMyLogistics(myRow)
       .then(() => Toast.show('Saved', 'success', 1200))
       .catch(() => Toast.show('Save failed', 'error'));
-  },
-
-  addLog() {
-    State.logistics.push({ name:'', departure_from:'', travel_mode:'Air', travel_booked:false, hotel_booked:false });
-    this.gotoStep(2);
   },
 
   /* ── STEP 3: PREFERENCES ───────────────────────────── */
