@@ -277,13 +277,13 @@ textarea.field-input { resize: vertical; }
 /* ─── AVAILABILITY CALENDAR ──────────────────────────────── */
 .cal-instruction { background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: #0C447C; }
 .cal-instruction strong { font-weight: 600; }
-#avail-calendar { width: 100%; overflow: hidden; }
-.cal-months   { display: block; margin: 14px 0; }
-.cal-month    { display: block; width: 100%; margin-bottom: 24px; }
+#avail-calendar { width: 100%; }
+.cal-months   { margin: 14px 0; }
+.cal-month    { margin-bottom: 28px; }
 .cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
-.cal-grid     { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; width: 100%; }
-.cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 4px; }
-.cal-day      { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; border-radius: var(--radius); position: relative; transition: all 0.12s; border: 1.5px solid transparent; line-height: 1; min-width: 0; overflow: hidden; }
+.cal-grid     { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; }
+.cal-day      { text-align: center; vertical-align: middle; font-size: 11px; padding: 7px 2px; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; overflow: hidden; transition: background 0.12s, border-color 0.12s; }
 .cal-day.in-window { cursor: pointer; }
 .cal-day.in-window:hover { border-color: var(--brand); background: var(--brand-light); }
 .cal-day.cal-mine { background: var(--brand); color: white; font-weight: 600; cursor: pointer; }
@@ -499,9 +499,8 @@ textarea.field-input { resize: vertical; }
   .vote-grid       { grid-template-columns: 1fr 1fr; }
 
   /* Calendar mobile tweaks */
-  .cal-grid    { gap: 1px; }
-  .cal-day     { font-size: 10px; }
-  .cal-hdr     { font-size: 8px; letter-spacing: 0; }
+  .cal-day  { font-size: 10px; padding: 5px 1px; }
+  .cal-hdr  { font-size: 8px; letter-spacing: 0; }
 
   /* Destination modal → full-screen */
   .modal-wrap.open {
@@ -2611,8 +2610,12 @@ const Planning = {
       const lastDay  = new Date(y, m + 1, 0).getDate();
       const firstDow = (new Date(y, m, 1).getDay() + 6) % 7; /* Mon=0 */
 
-      let cells = DHDRS.map(h => `<div class="cal-hdr">${h}</div>`).join('');
-      for (let i = 0; i < firstDow; i++) cells += '<div></div>';
+      /* Header row */
+      const headerRow = '<tr>' + DHDRS.map(h => `<th class="cal-hdr">${h}</th>`).join('') + '</tr>';
+
+      /* Build flat list of <td> cells, then chunk into rows of 7 */
+      const tds = [];
+      for (let i = 0; i < firstDow; i++) tds.push('<td></td>');
 
       for (let day = 1; day <= lastDay; day++) {
         const d    = new Date(y, m, day);
@@ -2634,14 +2637,20 @@ const Planning = {
         const click = inW ? `onclick="Planning.toggleDate('${dStr}')"` : '';
         const badge = inW && cnt && !mine ? `<span class="cal-cnt">${cnt}</span>` : '';
 
-        cells += `<div class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</div>`;
+        tds.push(`<td class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</td>`);
       }
 
-      /* Trailing blank cells so each month grid fills complete 7-column rows */
-      const trailing = (7 - ((firstDow + lastDay) % 7)) % 7;
-      for (let i = 0; i < trailing; i++) cells += '<div></div>';
+      /* Trailing empty cells to complete the last row */
+      const trailing = (7 - (tds.length % 7)) % 7;
+      for (let i = 0; i < trailing; i++) tds.push('<td></td>');
 
-      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><div class="cal-grid">${cells}</div></div>`;
+      /* Chunk into <tr> rows of 7 */
+      const bodyRows = [];
+      for (let i = 0; i < tds.length; i += 7) {
+        bodyRows.push('<tr>' + tds.slice(i, i + 7).join('') + '</tr>');
+      }
+
+      return `<div class="cal-month"><div class="cal-month-title">${MNAMES[m]} ${y}</div><table class="cal-grid"><thead>${headerRow}</thead><tbody>${bodyRows.join('')}</tbody></table></div>`;
     }).join('');
 
     return `<div class="cal-months">${html}</div>`;
