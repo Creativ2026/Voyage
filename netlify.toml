@@ -1,0 +1,9 @@
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-store"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-store"

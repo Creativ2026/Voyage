@@ -278,12 +278,12 @@ textarea.field-input { resize: vertical; }
 .cal-instruction { background: var(--blue-light); border: 0.5px solid var(--blue); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; font-size: 13px; line-height: 1.65; color: #0C447C; }
 .cal-instruction strong { font-weight: 600; }
 #avail-calendar { width: 100%; }
-.cal-months   { margin: 14px 0; }
-.cal-month    { margin-bottom: 28px; }
+.cal-months   { display: block; margin: 14px 0; }
+.cal-month    { display: block; margin-bottom: 32px; padding-bottom: 4px; }
 .cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
-.cal-grid     { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cal-grid     { display: table; width: 100%; border-collapse: collapse; table-layout: fixed; border-spacing: 0; }
 .cal-hdr      { font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; }
-.cal-day      { text-align: center; vertical-align: middle; font-size: 11px; padding: 7px 2px; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; overflow: hidden; transition: background 0.12s, border-color 0.12s; }
+.cal-day      { text-align: center; vertical-align: middle; font-size: 11px; padding: 7px 2px; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; transition: background 0.12s, border-color 0.12s; }
 .cal-day.in-window { cursor: pointer; }
 .cal-day.in-window:hover { border-color: var(--brand); background: var(--brand-light); }
 .cal-day.cal-mine { background: var(--brand); color: white; font-weight: 600; cursor: pointer; }
@@ -2258,9 +2258,11 @@ const Auth = {
 ═══════════════════════════════════════════════════════════════ */
 const App = {
   switchPage(page) {
+    const el = $('page-' + page);
+    if (!el) { console.error('switchPage: element not found for', page); return; }
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab, .bottom-nav-btn').forEach(t => t.classList.remove('active'));
-    $('page-' + page).classList.add('active');
+    el.classList.add('active');
     document.querySelectorAll(`[data-page="${page}"]`).forEach(t => t.classList.add('active'));
     localStorage.setItem('voyage_active_page', page);
     if (page === 'destinations') Destinations.init();
@@ -2271,40 +2273,57 @@ const App = {
   },
 
   async boot() {
-    /* Restore last page and render cities immediately, before any async work */
-    const lastPage = localStorage.getItem('voyage_active_page') || 'planning';
+    const lastPage   = localStorage.getItem('voyage_active_page') || 'planning';
     const validPages = ['destinations','planning','itinerary','photos','chat'];
-    this.switchPage(validPages.includes(lastPage) ? lastPage : 'planning');
-    Destinations.init(); /* ensure cities always visible regardless of active page */
+    const page       = validPages.includes(lastPage) ? lastPage : 'planning';
 
-    /* Check organizer permission once at boot */
-    State.canOrganize = await DB.isAllowedOrganizer(State.user.email);
+    /* Show a page and render cities immediately — isolated so nothing below can break this */
+    this.switchPage(page);
+    try { Destinations.init(); } catch(e) { console.error('Destinations.init:', e); }
 
-    /* Resolve pending email invites and ?join= URL param */
-    await TripManager.acceptPendingInvites();
+    /* Check organizer permission */
+    try { State.canOrganize = await DB.isAllowedOrganizer(State.user.email); }
+    catch(e) { console.error('isAllowedOrganizer:', e); }
+
+    /* Resolve pending invites and join codes */
+    try { await TripManager.acceptPendingInvites(); }
+    catch(e) { console.error('acceptPendingInvites:', e); }
+
     const joinCode = TripManager.checkJoinParam() || localStorage.getItem('voyage_pending_join');
     let joinedTripId = null;
     if (joinCode) {
-      localStorage.removeItem('voyage_pending_join');
-      joinedTripId = await TripManager.joinByCode(joinCode);
-      if (joinedTripId) localStorage.setItem('voyage_active_trip', joinedTripId);
-      history.replaceState({}, '', window.location.pathname);
+      try {
+        localStorage.removeItem('voyage_pending_join');
+        joinedTripId = await TripManager.joinByCode(joinCode);
+        if (joinedTripId) localStorage.setItem('voyage_active_trip', joinedTripId);
+        history.replaceState({}, '', window.location.pathname);
+      } catch(e) { console.error('joinByCode:', e); }
     }
 
-    /* Load user's trips and set the active one */
-    State.trips = await DB.loadUserTrips();
-    const savedId = joinedTripId || localStorage.getItem('voyage_active_trip');
-    const active  = State.trips.find(t => t.id === savedId) || State.trips[0];
-    State.activeTripId   = active?.id || 'default';
-    State.activeTripMeta = active    || await DB.loadTrip('default');
-    State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
-    TripManager.renderSwitcher();
+    /* Load trips and set the active one */
+    try {
+      State.trips = await DB.loadUserTrips();
+      const savedId = joinedTripId || localStorage.getItem('voyage_active_trip');
+      const active  = State.trips.find(t => t.id === savedId) || State.trips[0];
+      State.activeTripId   = active?.id || 'default';
+      State.activeTripMeta = active    || await DB.loadTrip('default');
+      State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
+      TripManager.renderSwitcher();
+    } catch(e) {
+      console.error('Trip load:', e);
+      Toast.show('Could not load trip data — check your connection', 'error');
+    }
 
-    await this.reloadTripData();
-    Planning.init();
+    /* Load trip data and set up live subscriptions */
+    try { await this.reloadTripData(); }
+    catch(e) { console.error('reloadTripData:', e); }
 
-    /* Re-show the restored page now that trip data is loaded */
-    this.switchPage(validPages.includes(lastPage) ? lastPage : 'planning');
+    /* Always initialise Planning regardless of earlier failures */
+    try { Planning.init(); }
+    catch(e) { console.error('Planning.init:', e); }
+
+    /* Re-show the correct page now that data is loaded */
+    this.switchPage(page);
   },
 
   async reloadTripData() {
@@ -2329,7 +2348,7 @@ const App = {
       console.error(e);
     }
 
-    State._subs = [
+    try { State._subs = [
       DB.subTripConfig(row => {
         State.tripConfig = {
           dest: row.confirmed_dest, country: row.confirmed_country,
@@ -2376,7 +2395,7 @@ const App = {
           await Planning.loadAndRenderComments(stepKey);
         }
       }),
-    ];
+    ]; } catch(e) { console.error('Subscription setup:', e); }
   },
 
   teardown() {
