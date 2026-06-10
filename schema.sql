@@ -257,3 +257,14 @@ ALTER TABLE trips ADD COLUMN IF NOT EXISTS dest_shortlist    jsonb  DEFAULT '[]'
 -- Incremented when organizer starts a new round so members always see "Round X"
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS date_vote_round  integer DEFAULT 1;
 ALTER TABLE trips ADD COLUMN IF NOT EXISTS dest_vote_round  integer DEFAULT 1;
+
+-- ── 12. TRAVEL DETAILS ON LOGISTICS ─────────────────────────────
+-- Extends logistics table to support per-member arrival (Day 1) and
+-- departure (last day) details displayed in the Itinerary section.
+-- departure_from / travel_mode (existing) map to arrival city / mode.
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS arrival_time   text;
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS arrival_ref    text;
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS departing_to   text;
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS departure_mode text;
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS departure_time text;
+ALTER TABLE logistics ADD COLUMN IF NOT EXISTS departure_ref  text;
