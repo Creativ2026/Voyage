@@ -2149,20 +2149,29 @@ const Auth = {
     }
     $('name-error').textContent = '';
 
+    if (this._editingName) {
+      /* Edit flow: close immediately, save in background */
+      this._editingName = false;
+      State.user.user_metadata = { ...State.user.user_metadata, display_name: name };
+      this.updateUserUI(State.user);
+      $('name-prompt').classList.remove('open');
+      $('name-prompt-cancel').style.display  = 'none';
+      $('name-prompt-signout').style.display = 'none';
+      sb.auth.updateUser({ data: { display_name: name } })
+        .then(({ error }) => { if (error) Toast.show('Name not saved — try again', 'error'); })
+        .catch(() => Toast.show('Name not saved — check your connection', 'error'));
+      return;
+    }
+
+    /* First sign-in flow: must succeed before booting */
     try {
       const { error } = await sb.auth.updateUser({ data: { display_name: name } });
       if (error) throw error;
-
       State.user.user_metadata = { ...State.user.user_metadata, display_name: name };
       $('name-prompt').classList.remove('open');
       $('name-prompt-signout').style.display = 'none';
       this.updateUserUI(State.user);
-
-      if (this._editingName) {
-        this._editingName = false;
-      } else {
-        await App.boot();
-      }
+      await App.boot();
     } catch(e) {
       $('name-error').textContent = 'Could not save name. Please try again.';
       console.error(e);
