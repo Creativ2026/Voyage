@@ -2192,6 +2192,7 @@ const Auth = {
     $('name-prompt').classList.remove('open');
     this.resetLoginForm();
     App.teardown();
+    localStorage.removeItem('voyage_active_page');
     /* Clear session in the background */
     try { await sb.auth.signOut(); } catch(e) { console.error(e); }
     Object.keys(localStorage).forEach(k => {
@@ -2262,6 +2263,7 @@ const App = {
     document.querySelectorAll('.nav-tab, .bottom-nav-btn').forEach(t => t.classList.remove('active'));
     $('page-' + page).classList.add('active');
     document.querySelectorAll(`[data-page="${page}"]`).forEach(t => t.classList.add('active'));
+    localStorage.setItem('voyage_active_page', page);
     if (page === 'destinations') Destinations.init();
     if (page === 'planning')  TripManager.refreshBanner();
     if (page === 'itinerary') Itinerary.refresh();
@@ -2299,6 +2301,11 @@ const App = {
     await this.reloadTripData();
     Destinations.init();
     Planning.init();
+
+    /* Restore the last page the user was viewing */
+    const lastPage = localStorage.getItem('voyage_active_page') || 'planning';
+    const validPages = ['destinations','planning','itinerary','photos','chat'];
+    this.switchPage(validPages.includes(lastPage) ? lastPage : 'planning');
   },
 
   async reloadTripData() {
