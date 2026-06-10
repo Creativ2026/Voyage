@@ -2536,11 +2536,13 @@ const Planning = {
     State.currentStep = n;
     STEPS.forEach((_,i) => {
       const t = $(`stab-${i+1}`);
+      if (!t) return;
       t.classList.remove('active','done');
       if (i+1 < n) t.classList.add('done');
       else if (i+1 === n) t.classList.add('active');
     });
-    $('step-body').innerHTML = STEPS[n-1].render();
+    const body = $('step-body');
+    if (body) body.innerHTML = STEPS[n-1].render();
     STEPS[n-1].onEnter();
   },
 
