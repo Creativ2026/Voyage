@@ -2931,7 +2931,7 @@ const Planning = {
 
   addPref() {
     State.prefs.push({ name:'', urban:'Open', accom:'Open', priority_rank:[], word:'' });
-    this.gotoStep(3);
+    this.gotoStep(State.currentStep || 2);
   },
 
   togglePrio(i, cat) {
@@ -3244,7 +3244,7 @@ const Planning = {
       sl.push(city);
     }
     await DB.saveDestShortlist(sl);
-    this.gotoStep(4);
+    this.gotoStep(3);
   },
 
   async addCustomDestToShortlist() {
@@ -3261,7 +3261,7 @@ const Planning = {
     sl.push(city);
     if (input) input.value = '';
     await DB.saveDestShortlist(sl);
-    this.gotoStep(4);
+    this.gotoStep(3);
   },
 
   async startNewDestRound() {
@@ -3273,7 +3273,7 @@ const Planning = {
       State.votes = {};
       State.voteComments = [];
       Toast.show(`Round ${newRound} started — go to Dashboard and pick a new shortlist`, 'info', 3000);
-      this.gotoStep(4);
+      this.gotoStep(3);
     } catch(e) {
       Toast.show('Failed to start new round', 'error');
       console.error(e);
@@ -3616,7 +3616,8 @@ const Itinerary = {
     const cfg = State.tripConfig;
     if (!cfg.start || !cfg.end) return;
     const days = getDays(cfg.start, cfg.end);
-    $('iti-subtitle').textContent =
+    const sub = $('iti-subtitle');
+    if (sub) sub.textContent =
       `${cfg.dest} · ${fmtDate(days[0])} – ${fmtDate(days[days.length-1])} · ${days.length} days`;
     days.forEach((_,i) => initDayData(i));
     const gateEl = $('iti-gate-strip');
@@ -3841,7 +3842,8 @@ const Itinerary = {
   },
 
   updateTravel(field, value) {
-    let myRow = State.logistics.find(r => r.user_id === State.user?.id);
+    if (!State.user) return;
+    let myRow = State.logistics.find(r => r.user_id === State.user.id);
     if (!myRow) {
       myRow = { user_id: State.user.id, name: Auth.displayName(State.user) };
       State.logistics.push(myRow);
