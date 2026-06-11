@@ -161,7 +161,7 @@ CREATE POLICY "members_delete" ON trip_members FOR DELETE USING (
 -- trip_invites: organizer or invitee can read
 CREATE POLICY "invites_select" ON trip_invites FOR SELECT USING (
   invited_by = auth.uid()
-  OR lower(email) = lower((SELECT email FROM auth.users WHERE id = auth.uid()))
+  OR lower(email) = lower(auth.email())
 );
 
 -- trip_invites: only organizer can create
@@ -174,7 +174,7 @@ CREATE POLICY "invites_insert" ON trip_invites FOR INSERT WITH CHECK (
 
 -- trip_invites: invitee can mark accepted
 CREATE POLICY "invites_update" ON trip_invites FOR UPDATE USING (
-  lower(email) = lower((SELECT email FROM auth.users WHERE id = auth.uid()))
+  lower(email) = lower(auth.email())
 );
 
 -- ── 6. ALLOWED ORGANIZERS ─────────────────────────────────────────
