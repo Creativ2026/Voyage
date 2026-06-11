@@ -2955,7 +2955,7 @@ const Planning = {
     }
     State.prefs[i].priority_rank = rank;
     DB.savePrefs(State.prefs).catch(() => {});
-    this.gotoStep(3);
+    this.gotoStep(State.currentStep);
   },
 
   /* ── STEP 4: DASHBOARD ─────────────────────────────── */
