@@ -1367,7 +1367,7 @@ const DB = {
     await sb.from('preferences').delete().eq('trip_id', State.activeTripId);
     if (rows.length) {
       const { error } = await sb.from('preferences').insert(
-        rows.map(r => ({ ...r, trip_id: State.activeTripId, user_id: State.user?.id }))
+        rows.map(r => ({ ...r, trip_id: State.activeTripId, user_id: r.user_id || State.user?.id }))
       );
       if (error) throw error;
     }
@@ -2954,7 +2954,7 @@ const Planning = {
       rank.push(cat);
     }
     State.prefs[i].priority_rank = rank;
-    DB.savePrefs(State.prefs).catch(() => {});
+    DB.savePrefs(State.prefs).catch(() => Toast.show('Could not save ranking', 'error'));
     this.gotoStep(State.currentStep);
   },
 
