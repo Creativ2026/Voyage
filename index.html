@@ -3044,12 +3044,14 @@ const Planning = {
     const sizeBonus = urbanBias > 0.5
       ? {'Large City':5,'Medium City':3,'Small City':1,'Village':0}
       : {'Village':5,'Small City':4,'Medium City':2,'Large City':0};
-    const maxScore  = DIMS.length * 5 * 8 + 5;
-    return State.destinations.map(d => {
+    const raw = State.destinations.map(d => {
       let score = DIMS.reduce((acc,dim) => acc + d.scores[dim] * (weights[dim]||1), 0);
       score += sizeBonus[d.size] || 0;
-      return { city:d.city, country:d.country, d, score:Math.round(score/maxScore*100) };
-    }).sort((a,b) => b.score-a.score);
+      return { city:d.city, country:d.country, d, score };
+    });
+    const maxRaw = Math.max(...raw.map(s => s.score)) || 1;
+    return raw.map(s => ({ ...s, score: Math.round(s.score / maxRaw * 100) }))
+              .sort((a,b) => b.score-a.score);
   },
 
   getMatchTags(d) {
