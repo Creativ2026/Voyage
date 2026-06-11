@@ -1626,48 +1626,24 @@ const DB = {
     const { error } = await sb.from('trip_invites').insert(
       { trip_id: State.activeTripId, email: email.toLowerCase(), invited_by: State.user.id }
     );
-    // 23505 = unique_violation (already invited) — safe to ignore, still send the email
+    // 23505 = unique_violation (already invited) — safe to ignore
     if (error && error.code !== '23505') throw new Error('DB error: ' + error.message);
 
     const joinUrl = `${window.location.origin}${window.location.pathname}?join=${State.activeTripId}`;
-    const html = `
-<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#1A1814;">
-  <div style="padding:32px 0 16px;">
-    <span style="font-family:Georgia,serif;font-size:28px;font-weight:700;">voyage<em style="color:#E8452C;font-style:italic;">.</em></span>
-  </div>
-  <h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700;margin:0 0 16px;">
-    ${organizerName} has invited you to join their group trip
-  </h2>
-  <div style="background:#FDF0ED;border-left:3px solid #E8452C;padding:12px 16px;margin:0 0 24px;border-radius:0 4px 4px 0;">
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.07em;color:#7A7670;margin-bottom:4px;">Trip</div>
-    <div style="font-family:Georgia,serif;font-size:20px;font-weight:700;">${tripName}</div>
-  </div>
-  <p style="font-size:14px;line-height:1.65;color:#444441;margin:0 0 28px;">
-    Click below to open Voyage and join the group. You'll be asked to sign in with this email — no password needed.
-  </p>
-  <a href="${joinUrl}" style="display:inline-block;background:#E8452C;color:white;text-decoration:none;padding:12px 28px;font-size:14px;font-weight:500;border-radius:4px;">
-    Join the Trip →
-  </a>
-  <p style="font-size:12px;color:#7A7670;margin:20px 0 0;">
-    Or enter invite code <strong style="font-family:monospace;letter-spacing:0.1em;font-size:14px;">${State.activeTripId}</strong> manually in the app.
-  </p>
-  <hr style="border:none;border-top:1px solid #E8E6DF;margin:32px 0 20px;">
-  <p style="font-size:11px;color:#7A7670;line-height:1.6;">
-    If you weren't expecting this, you can safely ignore it.<br>
-    Voyage Trip Planning · Group travel, together.
-  </p>
-</div>`;
+    const subject = encodeURIComponent(`You've been invited to "${tripName}" — Voyage`);
+    const body    = encodeURIComponent(
+`Hi,
 
-    const res = await fetch('/.netlify/functions/send-invite', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: email.toLowerCase(),
-        subject: `You've been invited to "${tripName}" — Voyage`,
-        html
-      })
-    });
-    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error('Email error: ' + (e.message || e.name || res.status)); }
+${organizerName} has invited you to join their group trip "${tripName}" on Voyage.
+
+Click this link to join:
+${joinUrl}
+
+Or enter invite code: ${State.activeTripId}
+
+— Voyage Trip Planning`
+    );
+    window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank');
   },
 
   async isAllowedOrganizer(email) {
@@ -1983,7 +1959,7 @@ const TripManager = {
       const organizerName = Auth.displayName(State.user);
       await DB.sendEmailInvite(email, tripName, organizerName);
       $('setup-invite-email').value = '';
-      Toast.show(`Invite sent to ${email}`, 'success');
+      Toast.show(`Email draft opened for ${email} — press Send in your email app`, 'success', 4000);
     } catch(e) { Toast.show(e.message || 'Could not send invite', 'error'); console.error(e); }
   },
 
