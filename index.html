@@ -1203,6 +1203,8 @@ const State = {
   voteComments:  [],   /* [{ name, text }] populated by DB.loadVotes */
   availability:  [],   /* [{ user_id, display_name, dates: ['YYYY-MM-DD', …] }] */
   dateVotes:     { tally: {}, total: 0, myVote: -1 },
+  currentStep:   1,
+  _myVotes:      [],
   _subs:         [],   /* Active Supabase real-time subscriptions */
 };
 
@@ -2407,20 +2409,24 @@ const App = {
         }
       }),
       DB.subDateVotes(async v => {
-        State.dateVotes = v;
-        if (State.currentStep === 1) {
-          const wrap = $('date-vote-wrap');
-          if (wrap) wrap.innerHTML = Planning.renderDateVoteSection();
-          else Planning.gotoStep(1);
-        }
+        try {
+          State.dateVotes = v;
+          if (State.currentStep === 1) {
+            const wrap = $('date-vote-wrap');
+            if (wrap) wrap.innerHTML = Planning.renderDateVoteSection();
+            else Planning.gotoStep(1);
+          }
+        } catch(e) { console.error('subDateVotes:', e); }
       }),
       DB.subAllStepComments(async () => {
-        if (!State.currentStep) return;
-        const stepKey = STEP_KEYS[State.currentStep - 1];
-        const body = $('sc-body-' + stepKey);
-        if (body && body.classList.contains('open')) {
-          await Planning.loadAndRenderComments(stepKey);
-        }
+        try {
+          if (!State.currentStep) return;
+          const stepKey = STEP_KEYS[State.currentStep - 1];
+          const body = $('sc-body-' + stepKey);
+          if (body && body.classList.contains('open')) {
+            await Planning.loadAndRenderComments(stepKey);
+          }
+        } catch(e) { console.error('subAllStepComments:', e); }
       }),
     ]; } catch(e) { console.error('Subscription setup:', e); }
   },
@@ -2782,7 +2788,7 @@ const Planning = {
 
   setDuration(n) {
     State.tripConfig.tripDuration = n;
-    DB.saveTripConfig(State.tripConfig).catch(() => {});
+    DB.saveTripConfig(State.tripConfig).catch(() => Toast.show('Could not save duration', 'error'));
     this.gotoStep(State.currentStep);
   },
 
