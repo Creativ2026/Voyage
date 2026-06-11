@@ -2880,8 +2880,9 @@ const Planning = {
 
   /* ── STEP 2: PREFERENCES ───────────────────────────── */
   renderPrefs() {
+    const myName = Auth.displayName(State.user);
     const list = State.prefs.length ? State.prefs
-      : [{ name:'', urban:'Open', accom:'Open', priority_rank:[], word:'' }];
+      : [{ name: myName, urban:'Open', accom:'Open', priority_rank:[], word:'' }];
     return `
       <div class="section-title">Traveler Preferences</div>
       ${list.map((p,i) => `
@@ -2940,7 +2941,7 @@ const Planning = {
   },
 
   addPref() {
-    State.prefs.push({ name:'', urban:'Open', accom:'Open', priority_rank:[], word:'' });
+    State.prefs.push({ name: Auth.displayName(State.user), urban:'Open', accom:'Open', priority_rank:[], word:'' });
     this.gotoStep(State.currentStep || 2);
   },
 
