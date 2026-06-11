@@ -2337,11 +2337,11 @@ const App = {
       State.activeTripId   = active?.id || 'default';
       State.activeTripMeta = active    || await DB.loadTrip('default');
       State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
-      TripManager.renderSwitcher();
     } catch(e) {
       console.error('Trip load:', e);
       Toast.show('Could not load trip data — check your connection', 'error');
     }
+    TripManager.renderSwitcher();
 
     /* Load trip data and set up live subscriptions */
     try { await this.reloadTripData(); }
