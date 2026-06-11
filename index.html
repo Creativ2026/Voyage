@@ -641,14 +641,14 @@ textarea.field-input { resize: vertical; }
       <div style="font-size:15px;font-weight:500;margin-bottom:8px;">Check your inbox</div>
       <p class="login-note">
         We sent a sign-in email to <strong id="login-email-display"></strong>.
-        It contains a 6-digit code and a sign-in link — use whichever is faster.
+        It contains a code and a sign-in link — use whichever is faster.
       </p>
       <div style="margin-top:16px;">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Enter the 6-digit code</label>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Enter the code from your email</label>
         <div style="display:flex;gap:8px;align-items:stretch;">
           <input class="field-input" type="text" id="login-otp"
-            placeholder="000000"
-            maxlength="6"
+            placeholder="00000000"
+            maxlength="8"
             inputmode="numeric"
             pattern="[0-9]*"
             autocomplete="one-time-code"
@@ -2120,8 +2120,8 @@ const Auth = {
       Auth.resetLoginForm();
       return;
     }
-    if (code.length !== 6) {
-      $('login-otp-error').textContent = 'Please enter the full 6-digit code from your email.';
+    if (code.length < 6) {
+      $('login-otp-error').textContent = 'Please enter the full code from your email.';
       return;
     }
 
