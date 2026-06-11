@@ -2968,7 +2968,20 @@ const Planning = {
     const top5    = this.scoreDestinationsCached().slice(0,5);
     const sl      = State.activeTripMeta?.dest_shortlist || [];
     const isOrg   = TripManager.isOrganizer();
+    const members = State.tripMembers;
+    const submittedNames = prefs.map(p => (p.name||'').trim().toLowerCase()).filter(Boolean);
+    const submitted = members.filter(m => submittedNames.includes((m.display_name||'').trim().toLowerCase()));
+    const pending   = members.filter(m => !submittedNames.includes((m.display_name||'').trim().toLowerCase()));
+    const allIn     = pending.length === 0 && members.length > 0;
     return `
+      ${isOrg ? `
+      <div style="background:${allIn?'var(--green)':'var(--surface)'}18;border:0.5px solid ${allIn?'var(--green)':'var(--border)'};border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:6px;color:${allIn?'var(--green)':'var(--ink)'};">
+          ${allIn ? '✓ All members have submitted preferences' : `Preferences submitted: ${submitted.length} / ${members.length}`}
+        </div>
+        ${pending.length ? `<div style="font-size:12px;color:var(--muted);">Still waiting on: ${pending.map(m=>m.display_name).join(', ')}</div>` : ''}
+        ${submitted.length ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;">Submitted: ${submitted.map(m=>m.display_name).join(', ')}</div>` : ''}
+      </div>` : ''}
       <div class="section-title">Group Preference Summary</div>
       <div class="stat-grid mb-16">
         <div class="stat-card"><div class="stat-val">${urban}/${prefs.length}</div><div class="stat-lbl">Prefer Urban</div></div>
