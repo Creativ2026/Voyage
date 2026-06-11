@@ -2553,6 +2553,7 @@ const Planning = {
   },
 
   gotoStep(n) {
+    if (!n || n < 1 || n > STEPS.length) { console.error('gotoStep: invalid step', n); return; }
     State.currentStep = n;
     STEPS.forEach((_,i) => {
       const t = $(`stab-${i+1}`);
