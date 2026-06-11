@@ -2977,6 +2977,9 @@ const Planning = {
         <div class="stat-card" style="grid-column:span 2;"><div class="stat-val" style="font-size:15px;">#1 Priority: ${topPri}</div><div class="stat-lbl">Group Consensus</div></div>
       </div>
       <div class="section-title">Top Destination Matches</div>
+      <div style="background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5;">
+        Scores reflect how well each city matches your group's priorities, city-size preference, and travel style. The top city always scores 100 — all others are shown relative to it.
+      </div>
       ${isOrg ? '<p class="t-muted t-small mb-8">Shortlist 2–3 destinations below to create the vote ballot — everyone will see results live.</p>' : ''}
       ${top5.map((s,i) => {
         const tags    = this.getMatchTags(s.d).map(t=>`<span class="tag tag-brand">${t}</span>`).join('');
