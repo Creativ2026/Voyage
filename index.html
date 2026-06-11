@@ -282,7 +282,7 @@ textarea.field-input { resize: vertical; }
 .cal-month       { display: block; margin-bottom: 24px; padding: 12px; background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius-lg); }
 .cal-month-title { font-family: var(--ff-display); font-size: 14px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
 .cal-week-row    { display: flex; width: 100%; }
-.cal-hdr         { flex: 0 0 14.2857%; width: 14.2857%; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 2px 0 6px; font-weight: 400; box-sizing: border-box; }
+.cal-hdr         { flex: 0 0 14.2857%; width: 14.2857%; font-size: 9px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); text-align: center; padding: 0; height: 26px; line-height: 26px; font-weight: 400; box-sizing: border-box; }
 .cal-empty       { flex: 0 0 14.2857%; width: 14.2857%; height: 30px; box-sizing: border-box; }
 .cal-day         { flex: 0 0 14.2857%; width: 14.2857%; text-align: center; font-size: 11px; padding: 6px 1px; height: 30px; box-sizing: border-box; border-radius: var(--radius); border: 1.5px solid transparent; line-height: 1; cursor: default; transition: background 0.12s, border-color 0.12s; }
 .cal-day.in-window { cursor: pointer; }
@@ -1239,6 +1239,15 @@ function formatCET(date) {
 function fmtDate(d)  { return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS_S[d.getMonth()]}`; }
 function avgScore(d) { return Object.values(d.scores).reduce((a,b) => a+b, 0) / DIMS.length; }
 function slotKey(s)  { return s.toLowerCase(); }
+
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 function colorForUser(id) {
   let h = 0;
@@ -2242,8 +2251,8 @@ const Auth = {
         $('login-screen').style.display = 'none';
         $('main-app').style.display     = 'block';
         /* Render both pages immediately — never blank regardless of async failures */
-        try { Destinations.init(); } catch(e) {}
-        try { Planning.init();     } catch(e) {}
+        try { Destinations.init(); } catch(e) { console.error('Destinations.init (auth):', e); }
+        try { Planning.init();     } catch(e) { console.error('Planning.init (auth):', e); }
 
         const hasName = !!session.user.user_metadata?.display_name;
 
@@ -3121,8 +3130,8 @@ const Planning = {
       return `<div class="sc-msg ${isMe?'mine':''}">
         <div class="sc-av" style="background:${col}22;color:${col};">${init}</div>
         <div>
-          <div class="sc-meta">${c.display_name} · ${time}</div>
-          <div class="sc-bubble">${c.text}</div>
+          <div class="sc-meta">${escapeHtml(c.display_name)} · ${time}</div>
+          <div class="sc-bubble">${escapeHtml(c.text)}</div>
         </div>
       </div>`;
     }).join('');
@@ -3482,8 +3491,8 @@ const Planning = {
         <div class="section-title mt-16">Vote Comments</div>
         ${(State.voteComments||[]).map(c => `
           <div class="result-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:10px 14px;">
-            <div class="t-small t-upper t-muted">${c.name}</div>
-            <div style="font-size:13px;font-style:italic;">"${c.text}"</div>
+            <div class="t-small t-upper t-muted">${escapeHtml(c.name)}</div>
+            <div style="font-size:13px;font-style:italic;">"${escapeHtml(c.text)}"</div>
           </div>`).join('')}
       ` : ''}
       ${isOrg ? `
@@ -3851,14 +3860,13 @@ const Itinerary = {
     myRow[field] = value;
     if (field === 'travel_mode' || field === 'departure_mode') {
       DB.saveMyLogistics(myRow).catch(() => Toast.show('Save failed', 'error'));
-      const cfg = State.tripConfig;
-      if (cfg.start && cfg.end) {
-        const days = getDays(cfg.start, cfg.end);
-        const panel = $(`dpanel-${State.itiDayIdx}`);
-        if (panel) panel.innerHTML = this.buildDayPanel(
-          days[State.itiDayIdx], State.itiDayIdx,
-          State.itiDayIdx === 0, State.itiDayIdx === days.length - 1
-        );
+      /* Update mode buttons in-place — rebuilding innerHTML wipes unsaved text inputs */
+      const panel = $(`dpanel-${State.itiDayIdx}`);
+      if (panel) {
+        panel.querySelectorAll(`.mode-btn[onclick*="${field}"]`).forEach(btn => {
+          const m = (btn.getAttribute('onclick').match(/'([^']+)'\)$/) || [])[1];
+          btn.classList.toggle('active', m === value);
+        });
       }
       return;
     }
@@ -4106,8 +4114,8 @@ const Chat = {
       return `<div class="chat-msg ${isMe?'mine':''}">
         <div class="chat-av" style="background:${color}22;color:${color};">${(m.display_name||'?')[0].toUpperCase()}</div>
         <div>
-          <div class="chat-time">${m.display_name} · ${time}</div>
-          <div class="chat-bubble">${m.text}</div>
+          <div class="chat-time">${escapeHtml(m.display_name)} · ${time}</div>
+          <div class="chat-bubble">${escapeHtml(m.text)}</div>
         </div>
       </div>`;
     }).join('');
