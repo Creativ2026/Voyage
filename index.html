@@ -2516,7 +2516,15 @@ const STEPS = [
   { label:'Dashboard',   render:() => Planning.renderDashboard(), onEnter:()=>{} },
   { label:'Vote',        render:() => Planning.renderVote(),      onEnter:()=>{ State._myVotes = []; } },
   { label:'Results',     render:() => Planning.renderResults(),   onEnter:()=>{} },
-  { label:'Confirm',     render:() => Planning.renderConfirm(),   onEnter:()=>{ const el=$('final-dest'); if(el) el.value=Planning.getTopDest(); } },
+  { label:'Confirm',     render:() => Planning.renderConfirm(),   onEnter:()=>{
+    const dest = $('final-dest');
+    if (dest && !dest.value) dest.value = Planning.getTopVotedDest();
+    const dates = Planning.getWinningDates();
+    if (dates) {
+      const s = $('trip-start'); if (s && !s.value) s.value = dates.startStr;
+      const e = $('trip-end');   if (e && !e.value) e.value = dates.endStr;
+    }
+  }},
 ];
 const STEP_KEYS = ['dates','prefs','dashboard','vote','results','confirm'];
 
@@ -3086,6 +3094,21 @@ const Planning = {
   },
 
   getTopDest() { return this.scoreDestinationsCached()[0]?.city || 'Barcelona'; },
+
+  getTopVotedDest() {
+    const entries = Object.entries(State.votes || {}).filter(([,v]) => v > 0);
+    if (entries.length) return entries.sort((a,b) => b[1]-a[1])[0][0];
+    return this.getTopDest();
+  },
+
+  getWinningDates() {
+    const opts  = State.activeTripMeta?.date_vote_options || [];
+    if (!opts.length) return null;
+    const tally = State.dateVotes?.tally || {};
+    const winIdx = opts.length === 1 ? 0
+      : parseInt(Object.entries(tally).sort((a,b) => b[1]-a[1])[0]?.[0] ?? 0);
+    return opts[winIdx] || null;
+  },
 
   /* ── STEP COMMENTS ───────────────────────────────────────────── */
   renderStepComments(stepKey) {
