@@ -4172,11 +4172,9 @@ const Photos = {
     let displayUrls = photos.map(p => p.url);
     if (photos.length) {
       try {
-        const paths = photos.map(p => p.path).filter(Boolean);
-        if (paths.length) {
-          const { data } = await sb.storage.from('trip-photos').createSignedUrls(paths, 3600);
-          if (data) displayUrls = photos.map((p, i) => data[i]?.signedUrl || p.url);
-        }
+        const paths = photos.map(p => p.path || '');
+        const { data } = await sb.storage.from('trip-photos').createSignedUrls(paths, 3600);
+        if (data) displayUrls = photos.map((p, i) => data[i]?.signedUrl || p.url);
       } catch(e) { /* fall through to stored public URLs */ }
     }
 
