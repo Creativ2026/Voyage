@@ -1519,13 +1519,13 @@ const DB = {
     const { error: upErr } = await sb.storage.from('trip-photos').upload(path, file);
     if (upErr) throw upErr;
     const { data: urlData } = sb.storage.from('trip-photos').getPublicUrl(path);
-    const { error: dbErr } = await sb.from('photos').insert({
+    const { data: inserted, error: dbErr } = await sb.from('photos').insert({
       trip_id: State.activeTripId, day_index: dayIdx, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       storage_path: path, url: urlData.publicUrl, uploaded_at: new Date()
-    });
+    }).select('id').single();
     if (dbErr) throw dbErr;
-    return urlData.publicUrl;
+    return { url: urlData.publicUrl, id: inserted.id, path };
   },
 
   async deletePhoto(id, storagePath) {
@@ -4187,7 +4187,10 @@ const Photos = {
     for (const file of files) {
       try {
         Toast.show('Uploading...', 'info', 2000);
-        await DB.uploadPhoto(dayIdx, file);
+        const photo = await DB.uploadPhoto(dayIdx, file);
+        if (!State.photos[dayIdx]) State.photos[dayIdx] = [];
+        State.photos[dayIdx].push({ id: photo.id, url: photo.url, path: photo.path, name: Auth.displayName(State.user) });
+        this.renderGrid();
         Toast.show('Photo uploaded!', 'success');
       } catch(e) {
         Toast.show('Upload failed', 'error');
