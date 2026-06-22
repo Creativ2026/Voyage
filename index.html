@@ -1318,16 +1318,16 @@ const DB = {
     const { data } = await sb.from('trips').select('*').eq('id', State.activeTripId).single();
     if (data) State.activeTripMeta = { ...State.activeTripMeta, ...data };
     if (!data) return {};
-    const dur = data.trip_duration || 5;
+    const dur = data.trip_duration;
     const start = data.confirmed_start;
-    const end = start
+    const end = (start && dur)
       ? (() => { const d = new Date(parseLocalDate(start)); d.setDate(d.getDate() + dur); return formatCET(d); })()
       : data.confirmed_end;
     return {
       dest: data.confirmed_dest, country: data.confirmed_country,
       start, end,
       windowStart: data.window_start || '', windowEnd: data.window_end || '',
-      tripDuration: dur
+      tripDuration: dur || 5
     };
   },
 
@@ -2420,9 +2420,9 @@ const App = {
 
     try { State._subs = [
       DB.subTripConfig(row => {
-        const dur = row.trip_duration || 5;
+        const dur = row.trip_duration;
         const start = row.confirmed_start;
-        const end = start
+        const end = (start && dur)
           ? (() => { const d = new Date(parseLocalDate(start)); d.setDate(d.getDate() + dur); return formatCET(d); })()
           : row.confirmed_end;
         State.tripConfig = {
@@ -2593,8 +2593,8 @@ const STEPS = [
     if (dest && !dest.value) dest.value = Planning.getTopVotedDest();
     const dates = Planning.getWinningDates();
     if (dates) {
-      const s = $('trip-start'); if (s) s.value = dates.startStr;
-      const e = $('trip-end');   if (e) e.value = dates.endStr;
+      const s = $('trip-start'); if (s && !s.value) s.value = dates.startStr;
+      const e = $('trip-end');   if (e && !e.value) e.value = dates.endStr;
     }
   }},
 ];
@@ -3674,8 +3674,8 @@ const Planning = {
   renderConfirm() {
     const cfg = State.tripConfig;
     const w = this.getWinningDates();
-    const startVal = w?.startStr || cfg.start || '';
-    const endVal   = w?.endStr   || cfg.end   || '';
+    const startVal = cfg.start || w?.startStr || '';
+    const endVal   = cfg.end   || w?.endStr   || '';
     return `
       ${this.renderGateStrip('destination')}
       <div class="section-title">Organizer — Final Confirmation</div>
@@ -3710,7 +3710,13 @@ const Planning = {
   async confirmTrip() {
     const destName = $('final-dest').value || this.getTopDest();
     const destObj  = State.destinations.find(d=>d.city===destName) || State.destinations[0];
-    const config   = { dest:destName, country:destObj?.country||'', start:$('trip-start').value, end:$('trip-end').value };
+    const config   = {
+      dest:destName, country:destObj?.country||'',
+      start:$('trip-start').value, end:$('trip-end').value,
+      tripDuration: State.tripConfig.tripDuration,
+      windowStart:  State.tripConfig.windowStart,
+      windowEnd:    State.tripConfig.windowEnd
+    };
     try {
       await DB.saveTripConfig(config);
       State.tripConfig = config;
