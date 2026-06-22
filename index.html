@@ -1553,14 +1553,33 @@ const DB = {
   },
 
   async loadUserTrips() {
-    const { data: memberships } = await sb.from('trip_members')
-      .select('trip_id, role').eq('user_id', State.user.id);
-    if (!memberships?.length) return [];
-    const ids = memberships.map(m => m.trip_id);
+    const userId = State.user?.id;
+    if (!userId) return [];
+
+    const { data: memberships, error: memErr } = await sb.from('trip_members')
+      .select('trip_id, role').eq('user_id', userId);
+    if (memErr) console.error('trip_members query error:', memErr);
+    console.log('[Voyage] loadUserTrips: memberships=', memberships?.length ?? 'null', 'userId=', userId);
+
+    let ids = (memberships || []).map(m => m.trip_id);
+
+    /* Fallback: if the membership query returned nothing (can happen on mobile
+       when the auth token isn't yet set in the request before the query fires),
+       search the trips table directly by organizer_id. */
+    if (!ids.length) {
+      console.warn('[Voyage] loadUserTrips: membership query empty — trying organizer fallback');
+      const { data: owned } = await sb.from('trips').select('id').eq('organizer_id', userId);
+      if (owned?.length) {
+        ids = owned.map(t => t.id);
+        console.log('[Voyage] loadUserTrips: organizer fallback found ids=', ids);
+      }
+    }
+
+    if (!ids.length) return [];
     const { data: trips } = await sb.from('trips').select('*').in('id', ids);
     return (trips || []).map(t => ({
       ...t,
-      role: memberships.find(m => m.trip_id === t.id)?.role || 'member'
+      role: memberships?.find(m => m.trip_id === t.id)?.role || (t.organizer_id === userId ? 'organizer' : 'member')
     }));
   },
 
@@ -1774,6 +1793,7 @@ const TripManager = {
     State.activeTripId   = tripId;
     State.activeTripMeta = State.trips.find(t => t.id === tripId) || await DB.loadTrip(tripId);
     localStorage.setItem('voyage_active_trip', tripId);
+    document.cookie = `voyage_trip=${tripId};max-age=2592000;path=/;SameSite=Lax`;
     State.tripMembers = await DB.loadTripMembers(tripId);
     this.renderSwitcher();
     $('trips-modal').classList.remove('open');
@@ -2317,7 +2337,8 @@ const App = {
     /* Load trips and set the active one */
     try {
       State.trips = await DB.loadUserTrips();
-      const savedId = joinedTripId || localStorage.getItem('voyage_active_trip');
+      const cookieTrip = document.cookie.match(/voyage_trip=([^;]+)/)?.[1];
+      const savedId = joinedTripId || localStorage.getItem('voyage_active_trip') || cookieTrip;
       let active  = State.trips.find(t => t.id === savedId) || State.trips[0];
 
       /* Fallback: if membership query returned empty (token timing edge-case),
@@ -2340,6 +2361,7 @@ const App = {
       /* Always persist the resolved trip so next refresh finds it immediately */
       if (State.activeTripId !== 'default') {
         localStorage.setItem('voyage_active_trip', State.activeTripId);
+        document.cookie = `voyage_trip=${State.activeTripId};max-age=2592000;path=/;SameSite=Lax`;
       }
     } catch(e) {
       console.error('Trip load:', e);
