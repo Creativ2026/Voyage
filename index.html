@@ -2278,6 +2278,15 @@ const App = {
   },
 
   async boot() {
+    /* Ensure the auth token is valid before any RLS-protected queries run.
+       On cold page loads the INITIAL_SESSION can fire before the JWT is
+       refreshed, causing auth.uid() to be null in the database and making
+       trip membership queries silently return empty rows. */
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) { State.user = session.user; Auth.updateUserUI(session.user); }
+    } catch(e) { console.error('Session refresh on boot:', e); }
+
     const lastPage   = localStorage.getItem('voyage_active_page') || 'planning';
     const validPages = ['destinations','planning','itinerary','photos','chat'];
     const page       = validPages.includes(lastPage) ? lastPage : 'planning';
@@ -2309,10 +2318,29 @@ const App = {
     try {
       State.trips = await DB.loadUserTrips();
       const savedId = joinedTripId || localStorage.getItem('voyage_active_trip');
-      const active  = State.trips.find(t => t.id === savedId) || State.trips[0];
+      let active  = State.trips.find(t => t.id === savedId) || State.trips[0];
+
+      /* Fallback: if membership query returned empty (token timing edge-case),
+         try loading the last-known trip directly from the trips table. */
+      if (!active && savedId && savedId !== 'default') {
+        try {
+          const directTrip = await DB.loadTrip(savedId);
+          if (directTrip) {
+            active = { ...directTrip, role: 'member' };
+            State.trips = [active];
+            console.warn('Recovered active trip via direct load:', savedId);
+          }
+        } catch(e2) { console.error('Direct trip fallback:', e2); }
+      }
+
       State.activeTripId   = active?.id || 'default';
       State.activeTripMeta = active    || await DB.loadTrip('default');
       State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
+
+      /* Always persist the resolved trip so next refresh finds it immediately */
+      if (State.activeTripId !== 'default') {
+        localStorage.setItem('voyage_active_trip', State.activeTripId);
+      }
     } catch(e) {
       console.error('Trip load:', e);
       Toast.show('Could not load trip data — check your connection', 'error');
@@ -2595,12 +2623,14 @@ const Planning = {
 
       <div class="divider"></div>
       <div class="section-title">Mark Your Availability</div>
-      <p class="t-muted" style="font-size:12px;margin-bottom:12px;">
+      ${State.activeTripMeta?.availability_closed
+        ? `<p style="font-size:12px;margin-bottom:12px;color:var(--green);"><strong>✓ Gate closed</strong> — availability is locked. Calendar is read-only.</p>`
+        : `<p class="t-muted" style="font-size:12px;margin-bottom:12px;">
         Tap any day to mark a block of dates matching the trip duration. Your dates appear in
         <span style="color:var(--brand);font-weight:600;">red</span>.
         Tap any selected day to deselect the whole block.
         Green shading and the corner number show how many others are also available.
-      </p>
+      </p>`}
       <div id="avail-calendar">${this.renderCalendar()}</div>
       <div class="cal-legend">
         <span><span class="cal-legend-swatch" style="background:var(--brand);"></span>Your dates</span>
@@ -2702,11 +2732,13 @@ const Planning = {
           else if (heat) cls += ` cal-heat${heat}`;
         }
 
+        const gateClosed = !!State.activeTripMeta?.availability_closed;
         const tip   = inW && cnt ? `${cnt} participant${cnt>1?'s':''} available` : '';
-        const click = inW ? `onclick="Planning.toggleDate('${dStr}')"` : '';
+        const click = (inW && !gateClosed) ? `onclick="Planning.toggleDate('${dStr}')"` : '';
         const badge = inW && cnt && !mine ? `<span class="cal-cnt">${cnt}</span>` : '';
+        const style = (gateClosed && inW) ? ' style="cursor:default;"' : '';
 
-        cells.push(`<span class="${cls}" ${click}${tip?` title="${tip}"`:''}>${day}${badge}</span>`);
+        cells.push(`<span class="${cls}" ${click}${tip?` title="${tip}"`:''}${style}>${day}${badge}</span>`);
       }
 
       /* Trailing empty cells to complete the last week */
