@@ -1317,12 +1317,18 @@ const DB = {
   async loadTripConfig() {
     const { data } = await sb.from('trips').select('*').eq('id', State.activeTripId).single();
     if (data) State.activeTripMeta = { ...State.activeTripMeta, ...data };
-    return data ? {
+    if (!data) return {};
+    const dur = data.trip_duration || 5;
+    const start = data.confirmed_start;
+    const end = start
+      ? (() => { const d = new Date(parseLocalDate(start)); d.setDate(d.getDate() + dur); return formatCET(d); })()
+      : data.confirmed_end;
+    return {
       dest: data.confirmed_dest, country: data.confirmed_country,
-      start: data.confirmed_start, end: data.confirmed_end,
+      start, end,
       windowStart: data.window_start || '', windowEnd: data.window_end || '',
-      tripDuration: data.trip_duration || 5
-    } : {};
+      tripDuration: dur
+    };
   },
 
   subTripConfig(cb) {
@@ -2414,11 +2420,16 @@ const App = {
 
     try { State._subs = [
       DB.subTripConfig(row => {
+        const dur = row.trip_duration || 5;
+        const start = row.confirmed_start;
+        const end = start
+          ? (() => { const d = new Date(parseLocalDate(start)); d.setDate(d.getDate() + dur); return formatCET(d); })()
+          : row.confirmed_end;
         State.tripConfig = {
           dest: row.confirmed_dest, country: row.confirmed_country,
-          start: row.confirmed_start, end: row.confirmed_end,
+          start, end,
           windowStart: row.window_start || '', windowEnd: row.window_end || '',
-          tripDuration: row.trip_duration || 5
+          tripDuration: dur
         };
         State.activeTripMeta = { ...State.activeTripMeta, ...row };
         if (row.confirmed_dest) Itinerary.seedDays();
@@ -2582,8 +2593,8 @@ const STEPS = [
     if (dest && !dest.value) dest.value = Planning.getTopVotedDest();
     const dates = Planning.getWinningDates();
     if (dates) {
-      const s = $('trip-start'); if (s && !s.value) s.value = dates.startStr;
-      const e = $('trip-end');   if (e && !e.value) e.value = dates.endStr;
+      const s = $('trip-start'); if (s) s.value = dates.startStr;
+      const e = $('trip-end');   if (e) e.value = dates.endStr;
     }
   }},
 ];
@@ -3662,6 +3673,9 @@ const Planning = {
   /* ── STEP 7: CONFIRM ───────────────────────────────── */
   renderConfirm() {
     const cfg = State.tripConfig;
+    const w = this.getWinningDates();
+    const startVal = w?.startStr || cfg.start || '';
+    const endVal   = w?.endStr   || cfg.end   || '';
     return `
       ${this.renderGateStrip('destination')}
       <div class="section-title">Organizer — Final Confirmation</div>
@@ -3678,11 +3692,11 @@ const Planning = {
       <div class="grid-2">
         <div class="field-row">
           <label class="field-label">Trip Start</label>
-          <input class="field-input" type="date" id="trip-start" value="${cfg.start||''}">
+          <input class="field-input" type="date" id="trip-start" value="${startVal}">
         </div>
         <div class="field-row">
           <label class="field-label">Trip End</label>
-          <input class="field-input" type="date" id="trip-end" value="${cfg.end||''}">
+          <input class="field-input" type="date" id="trip-end" value="${endVal}">
         </div>
       </div>
       <button class="btn btn-brand mb-16" onclick="Planning.confirmTrip()">Confirm Trip ✓</button>
@@ -4079,7 +4093,23 @@ const Itinerary = {
   _timers: {},
   _travelTimer: null,
   updateField(dayIdx, field, value) {
+    const oldVal = initDayData(dayIdx)[field];
     initDayData(dayIdx)[field] = value;
+    if (dayIdx === 0 && field === 'hotel' && State.tripConfig.start && State.tripConfig.end) {
+      const days = getDays(State.tripConfig.start, State.tripConfig.end);
+      for (let i = 1; i < days.length; i++) {
+        const d = initDayData(i);
+        if (!d.hotel || d.hotel === oldVal) {
+          d.hotel = value;
+          const panel = document.getElementById(`dpanel-${i}`);
+          if (panel) {
+            const inp = panel.querySelector('.fixed-slot-input');
+            if (inp) inp.value = value;
+          }
+          this._scheduleSave(i);
+        }
+      }
+    }
     this._scheduleSave(dayIdx);
   },
   updateBlock(dayIdx, bi, value) {
