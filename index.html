@@ -2334,31 +2334,40 @@ const App = {
       } catch(e) { console.error('joinByCode:', e); }
     }
 
-    /* Load trips and set the active one */
+    /* Load trips and set the active one.
+       On mobile the auth token can take a moment to reach the DB layer even
+       after getSession() returns, so retry up to 3 times with back-off. */
     try {
-      State.trips = await DB.loadUserTrips();
       const cookieTrip = document.cookie.match(/voyage_trip=([^;]+)/)?.[1];
       const savedId = joinedTripId || localStorage.getItem('voyage_active_trip') || cookieTrip;
-      let active  = State.trips.find(t => t.id === savedId) || State.trips[0];
 
-      /* Fallback: if membership query returned empty (token timing edge-case),
-         try loading the last-known trip directly from the trips table. */
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        State.trips = await DB.loadUserTrips();
+        if (State.trips.length) break;
+        if (attempt < 3) {
+          console.warn(`[Voyage] loadUserTrips empty (attempt ${attempt}), retrying in ${attempt * 400}ms…`);
+          await new Promise(r => setTimeout(r, attempt * 400));
+        }
+      }
+
+      let active = State.trips.find(t => t.id === savedId) || State.trips[0];
+
+      /* Final fallback: load the last-known trip directly by ID */
       if (!active && savedId && savedId !== 'default') {
-        try {
-          const directTrip = await DB.loadTrip(savedId);
-          if (directTrip) {
-            active = { ...directTrip, role: 'member' };
-            State.trips = [active];
-            console.warn('Recovered active trip via direct load:', savedId);
-          }
-        } catch(e2) { console.error('Direct trip fallback:', e2); }
+        const directTrip = await DB.loadTrip(savedId).catch(() => null);
+        if (directTrip) {
+          active = { ...directTrip, role: 'organizer' };
+          State.trips = [active];
+          console.warn('[Voyage] Recovered trip via direct load:', savedId);
+        }
       }
 
       State.activeTripId   = active?.id || 'default';
       State.activeTripMeta = active    || await DB.loadTrip('default');
       State.tripMembers    = await DB.loadTripMembers(State.activeTripId);
 
-      /* Always persist the resolved trip so next refresh finds it immediately */
+      /* Persist the resolved trip in both localStorage and a cookie so the
+         next refresh (including mobile tab restores) finds it immediately */
       if (State.activeTripId !== 'default') {
         localStorage.setItem('voyage_active_trip', State.activeTripId);
         document.cookie = `voyage_trip=${State.activeTripId};max-age=2592000;path=/;SameSite=Lax`;
