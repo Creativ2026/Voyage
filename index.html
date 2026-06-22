@@ -2429,7 +2429,7 @@ const App = {
           dest: row.confirmed_dest, country: row.confirmed_country,
           start, end,
           windowStart: row.window_start || '', windowEnd: row.window_end || '',
-          tripDuration: dur
+          tripDuration: dur || 5
         };
         State.activeTripMeta = { ...State.activeTripMeta, ...row };
         if (row.confirmed_dest) Itinerary.seedDays();
