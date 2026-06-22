@@ -3162,12 +3162,18 @@ const Planning = {
   },
 
   getWinningDates() {
-    const opts  = State.activeTripMeta?.date_vote_options || [];
+    const opts = State.activeTripMeta?.date_vote_options || [];
     if (!opts.length) return null;
-    const tally = State.dateVotes?.tally || {};
+    const tally  = State.dateVotes?.tally || {};
     const winIdx = opts.length === 1 ? 0
       : parseInt(Object.entries(tally).sort((a,b) => b[1]-a[1])[0]?.[0] ?? 0);
-    return opts[winIdx] || null;
+    const opt = opts[winIdx];
+    if (!opt) return null;
+    /* Recompute endStr from startStr + duration so stale stored values are corrected */
+    const dur    = State.tripConfig.tripDuration || 5;
+    const depart = new Date(parseLocalDate(opt.startStr));
+    depart.setDate(depart.getDate() + dur);
+    return { ...opt, endStr: formatCET(depart) };
   },
 
   /* ── STEP COMMENTS ───────────────────────────────────────────── */
@@ -3268,6 +3274,17 @@ const Planning = {
       </div>`;
     }
 
+    /* Always derive the label from startStr + trip duration so stale stored
+       labels (pinned before the off-by-one fix) are automatically corrected. */
+    const dur = State.tripConfig.tripDuration || 5;
+    const fmtOpt = opt => {
+      if (!opt.startStr) return opt.label || '';
+      const arrival = parseLocalDate(opt.startStr);
+      const depart  = new Date(arrival); depart.setDate(depart.getDate() + dur);
+      const fmt = d => d.toLocaleDateString('en-GB', { day:'numeric', month:'short', timeZone:'Europe/Paris' });
+      return `${fmt(arrival)} – ${fmt(depart)}`;
+    };
+
     return `<div class="dv-section">
       <div class="flex-between mb-8">
         <div class="section-title" style="margin:0;">Date Vote</div>
@@ -3283,7 +3300,7 @@ const Planning = {
           const sel   = myV === i;
           return `<div class="dv-opt ${sel?'selected':''}" onclick="Planning.submitDateVote(${i})">
             <div style="flex:1;">
-              <div class="dv-opt-label">${opt.label}</div>
+              <div class="dv-opt-label">${fmtOpt(opt)}</div>
               <div class="dv-opt-bar"><div class="dv-opt-bar-fill" style="width:${pct}%"></div></div>
             </div>
             <div class="dv-opt-tally">${count} vote${count!==1?'s':''} · ${pct}%${sel?' ✓':''}</div>
