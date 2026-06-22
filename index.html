@@ -3828,11 +3828,12 @@ const Itinerary = {
   },
 
   buildOverviewCol(date, idx, data, isFirst, isLast) {
+    const badgeStyle = 'font-size:9px;text-align:center;padding:3px 0;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid';
     const travelBadge = isFirst
-      ? `<div style="background:var(--blue-light);color:var(--blue);font-size:9px;text-align:center;padding:3px 0;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(44,95,138,0.2);">✈ Arrivals</div>`
+      ? `<div style="${badgeStyle} rgba(44,95,138,0.2);background:var(--blue-light);color:var(--blue);">✈ Arrivals</div>`
       : isLast
-      ? `<div style="background:var(--brand-light);color:var(--brand);font-size:9px;text-align:center;padding:3px 0;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid rgba(232,69,44,0.15);">✈ Departures</div>`
-      : '';
+      ? `<div style="${badgeStyle} rgba(232,69,44,0.15);background:var(--brand-light);color:var(--brand);">✈ Departures</div>`
+      : `<div style="${badgeStyle} transparent;visibility:hidden;">✈</div>`;
     const fixedSlots = FIXED_SLOTS.map(s => {
       const key   = slotKey(s);
       const val   = data[key] || '';
