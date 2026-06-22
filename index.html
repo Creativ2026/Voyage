@@ -2511,7 +2511,9 @@ const Destinations = {
    Adding a new step: add one object to STEPS array only.
 ═══════════════════════════════════════════════════════════════ */
 const STEPS = [
-  { label:'Dates',       render:() => Planning.renderDates(),     onEnter:()=>{} },
+  { label:'Dates',       render:() => Planning.renderDates(),     onEnter:()=>{
+    if (State.activeTripMeta?.availability_closed && State.availability.length > 0) Planning.findBestDates();
+  }},
   { label:'Preferences', render:() => Planning.renderPrefs(),     onEnter:()=>{} },
   { label:'Dashboard',   render:() => Planning.renderDashboard(), onEnter:()=>{} },
   { label:'Vote',        render:() => Planning.renderVote(),      onEnter:()=>{ State._myVotes = []; } },
@@ -2605,6 +2607,31 @@ const Planning = {
         <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.18);"></span>1 person available</span>
         <span><span class="cal-legend-swatch" style="background:rgba(46,125,82,0.75);"></span>Everyone available</span>
       </div>
+
+      ${State.availability.length > 0 ? `
+        <div class="divider"></div>
+        <div class="section-title">Member Availability Summary</div>
+        <div style="margin-bottom:16px;">
+          ${State.availability.map(row => {
+            const sorted = [...(row.dates || [])].sort();
+            const ranges = [];
+            let rs = null, prev = null;
+            sorted.forEach(d => {
+              if (!rs) { rs = d; prev = d; }
+              else if ((parseLocalDate(d) - parseLocalDate(prev)) / 86400000 <= 1) { prev = d; }
+              else { ranges.push([rs, prev]); rs = d; prev = d; }
+            });
+            if (rs) ranges.push([rs, prev]);
+            const fmtD = s => new Date(s + 'T12:00:00Z').toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+            const rangeStr = ranges.length
+              ? ranges.map(([s,e]) => s === e ? fmtD(s) : `${fmtD(s)} – ${fmtD(e)}`).join(', ')
+              : '<em class="t-muted">No dates submitted</em>';
+            return `<div style="margin-bottom:6px;font-size:13px;padding:8px 12px;background:var(--surface);border-radius:8px;">
+              <strong>${escapeHtml(row.display_name || 'Member')}</strong>: ${rangeStr}
+            </div>`;
+          }).join('')}
+        </div>
+      ` : ''}
 
       <div class="flex gap-8 mt-16">
         <button class="btn btn-brand" onclick="Planning.findBestDates()">Find Best Windows</button>
