@@ -2875,8 +2875,9 @@ const Planning = {
         const tag     = w.score === total ? 'tag-green' : w.score > total / 2 ? 'tag-blue' : 'tag-amber';
         const label   = w.score === total ? 'Everyone available' : `${w.score} of ${total} prefer`;
         const fill    = w.score === total ? 'var(--green)' : 'var(--blue)';
-        const endStr  = formatCET(w.end);
-        const vLabel  = `${fmtShort(w.start)} – ${fmtShort(w.end)}`;
+        const departure = new Date(w.end); departure.setDate(departure.getDate() + 1);
+        const endStr  = formatCET(departure);
+        const vLabel  = `${fmtShort(w.start)} – ${fmtShort(departure)}`;
         const pinned  = pinnedOpts.some(o => o.startStr === w.startStr);
         return `<div class="result-row" style="flex-direction:column;align-items:flex-start;gap:5px;padding:12px 14px;">
           <div class="flex-between" style="width:100%">
