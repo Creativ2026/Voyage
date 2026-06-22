@@ -4162,13 +4162,27 @@ const Photos = {
 
   switchDay(i) { State.photoDayIdx = i; this.render(); },
 
-  renderGrid() {
+  async renderGrid() {
     const photos = State.photos[State.photoDayIdx] || [];
     const grid   = $('photo-grid');
     if (!grid) return;
-    const thumbs = photos.map(p => `
+
+    /* Resolve display URLs — signed URLs work whether the bucket is public or
+       private; getPublicUrl only works on public buckets, so we prefer signing. */
+    let displayUrls = photos.map(p => p.url);
+    if (photos.length) {
+      try {
+        const paths = photos.map(p => p.path).filter(Boolean);
+        if (paths.length) {
+          const { data } = await sb.storage.from('trip-photos').createSignedUrls(paths, 3600);
+          if (data) displayUrls = photos.map((p, i) => data[i]?.signedUrl || p.url);
+        }
+      } catch(e) { /* fall through to stored public URLs */ }
+    }
+
+    const thumbs = photos.map((p, i) => `
       <div class="photo-thumb">
-        <img src="${p.url}" alt="trip photo" loading="lazy">
+        <img src="${displayUrls[i]}" alt="trip photo" loading="lazy">
         <button class="photo-delete" onclick="Photos.deletePhoto('${p.id}','${p.path}')">✕</button>
       </div>`
     ).join('');
