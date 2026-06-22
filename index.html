@@ -2677,9 +2677,10 @@ const Planning = {
             const sorted = [...(row.dates || [])].sort();
             const ranges = [];
             let rs = null, prev = null;
+            const toUtcDay = s => Date.UTC(+s.slice(0,4), +s.slice(5,7)-1, +s.slice(8,10));
             sorted.forEach(d => {
               if (!rs) { rs = d; prev = d; }
-              else if ((parseLocalDate(d) - parseLocalDate(prev)) / 86400000 <= 1) { prev = d; }
+              else if ((toUtcDay(d) - toUtcDay(prev)) / 86400000 <= 1) { prev = d; }
               else { ranges.push([rs, prev]); rs = d; prev = d; }
             });
             if (rs) ranges.push([rs, prev]);
@@ -2735,6 +2736,8 @@ const Planning = {
     const MNAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const DHDRS  = ['Mo','Tu','We','Th','Fr','Sa','Su'];
 
+    const gateClosed = !!State.activeTripMeta?.availability_closed;
+
     const html = months.map(ms => {
       const y = ms.getFullYear(), m = ms.getMonth();
       const lastDay  = new Date(y, m + 1, 0).getDate();
@@ -2763,7 +2766,6 @@ const Planning = {
           else if (heat) cls += ` cal-heat${heat}`;
         }
 
-        const gateClosed = !!State.activeTripMeta?.availability_closed;
         const tip   = inW && cnt ? `${cnt} participant${cnt>1?'s':''} available` : '';
         const click = (inW && !gateClosed) ? `onclick="Planning.toggleDate('${dStr}')"` : '';
         const badge = inW && cnt && !mine ? `<span class="cal-cnt">${cnt}</span>` : '';
@@ -2860,9 +2862,12 @@ const Planning = {
     } catch(e) { console.error(e); }
   },
 
-  setDuration(n) {
+  async setDuration(n) {
     State.tripConfig.tripDuration = n;
-    DB.saveTripConfig(State.tripConfig).catch(() => Toast.show('Could not save duration', 'error'));
+    State.activeTripMeta = { ...State.activeTripMeta, trip_duration: n };
+    try {
+      await DB.updateTrip({ trip_duration: n });
+    } catch(e) { Toast.show('Could not save duration', 'error'); console.error(e); }
     this.gotoStep(State.currentStep);
   },
 
