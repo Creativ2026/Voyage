@@ -2694,18 +2694,19 @@ const Planning = {
 
   /* ── STEP 1: DATES ──────────────────────────────────── */
   renderDates() {
-    const ws  = State.tripConfig.windowStart || '';
-    const we  = State.tripConfig.windowEnd   || '';
-    const dur = State.tripConfig.tripDuration || 5;
+    const ws    = State.tripConfig.windowStart || '';
+    const we    = State.tripConfig.windowEnd   || '';
+    const dur   = State.tripConfig.tripDuration || 5;
+    const isOrg = TripManager.isOrganizer();
     return `
       ${this.renderGateStrip('availability')}
+      ${isOrg ? `
       <div class="cal-instruction">
         <strong>How to agree on trip dates</strong><br>
-        1. The <em>organiser</em> sets a search window (up to ~3 months) and the agreed trip duration in nights below.<br>
-        2. Every participant taps their preferred start dates — each tap selects a block covering the full trip duration. Tap a selected day to remove that block.<br>
-        3. Hit <strong>Find Best Windows</strong> to see which periods most people prefer — windows where everyone is available are highlighted.
+        1. Set a search window (up to ~3 months) and trip duration below.<br>
+        2. Every participant taps their preferred start dates — each tap selects a block covering the full trip duration.<br>
+        3. Hit <strong>Find Best Windows</strong> to see which periods most people prefer.
       </div>
-
       <div class="section-title">Organiser Settings</div>
       <div class="grid-2 mb-8">
         <div class="field-row">
@@ -2723,8 +2724,12 @@ const Planning = {
           ${[2,3,4,5,6].map(n => `<button class="dur-btn ${dur===n?'active':''}" onclick="Planning.setDuration(${n})">${n} nights</button>`).join('')}
         </div>
       </div>
+      <div class="divider"></div>` : (!ws || !we ? `
+      <div class="cal-instruction">
+        <strong>Waiting on the organiser</strong><br>
+        The organiser hasn't set the search window yet. Check back soon — the calendar will appear here once they do.
+      </div>` : '')}
 
-      <div class="divider"></div>
       <div class="section-title">Mark Your Availability</div>
       ${State.activeTripMeta?.availability_closed
         ? `<p style="font-size:12px;margin-bottom:12px;color:var(--green);"><strong>✓ Gate closed</strong> — availability is locked. Calendar is read-only.</p>`
