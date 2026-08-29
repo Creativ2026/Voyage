@@ -1731,6 +1731,13 @@ Or enter invite code: ${State.activeTripId}
   },
 
   async deleteTrip(tripId) {
+    /* Remove photo files from Storage before deleting the trip row */
+    const { data: photoRows } = await sb.from('photos')
+      .select('storage_path').eq('trip_id', tripId);
+    if (photoRows?.length) {
+      const paths = photoRows.map(r => r.storage_path).filter(Boolean);
+      if (paths.length) await sb.storage.from('trip-photos').remove(paths);
+    }
     const { error } = await sb.from('trips').delete().eq('id', tripId);
     if (error) throw error;
   },
