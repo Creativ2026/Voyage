@@ -1211,6 +1211,48 @@ const State = {
 };
 
 /* ═══════════════════════════════════════════════════════════════
+   PUSH NOTIFICATIONS
+═══════════════════════════════════════════════════════════════ */
+const VAPID_PUBLIC_KEY = 'BDoTyXIi3Jry7Ah1Pv8gIRSyQ3Ub9lvssYesOAXoGcAi_E6N-SlfGeQm7ZnzrSLniKDlLk1QUl3GvhqPVHTBDKc';
+
+const Push = {
+  async subscribe() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') return;
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: Push._b64ToUint8(VAPID_PUBLIC_KEY),
+        });
+      }
+      await sb.from('push_subscriptions').upsert(
+        { user_id: State.user.id, subscription: sub.toJSON() },
+        { onConflict: 'user_id' }
+      );
+    } catch(e) { console.warn('Push subscribe:', e); }
+  },
+
+  async notify(tripId, title, body) {
+    if (!State.user || !tripId || tripId === 'default') return;
+    try {
+      await sb.functions.invoke('send-push', {
+        body: { trip_id: tripId, sender_id: State.user.id, title, body }
+      });
+    } catch(e) { console.warn('Push notify:', e); }
+  },
+
+  _b64ToUint8(b64) {
+    const pad = '='.repeat((4 - b64.length % 4) % 4);
+    const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    return Uint8Array.from(raw, c => c.charCodeAt(0));
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════════════════════════════ */
 const $ = id => document.getElementById(id);
@@ -1793,6 +1835,7 @@ const TripManager = {
       if (!trip) { Toast.show('Trip not found — check the invite code', 'error'); return null; }
       await DB.joinTrip(trip.id, 'member', Auth.displayName(State.user));
       Toast.show(`Joined "${trip.name}"!`, 'success');
+      Push.notify(trip.id, 'New member joined', `${Auth.displayName(State.user)} just joined the trip!`).catch(() => {});
       return trip.id;
     } catch(e) { Toast.show('Could not join trip', 'error'); console.error(e); return null; }
   },
@@ -2013,10 +2056,14 @@ const TripManager = {
   async closeGate(type) {
     if (!confirm(`Close the ${type} gate? Participants will see results but can no longer submit changes.`)) return;
     await this._saveGateField(type + '_closed', true);
+    const labels = { availability: 'Availability', destination: 'Destination', itinerary: 'Itinerary' };
+    Push.notify(State.activeTripId, `${labels[type]} closed`, 'The organizer has closed this step — check the results!').catch(() => {});
   },
 
   async reopenGate(type) {
     await this._saveGateField(type + '_closed', false);
+    const labels = { availability: 'Availability', destination: 'Destination', itinerary: 'Itinerary' };
+    Push.notify(State.activeTripId, `${labels[type]} reopened`, 'This step is open again — submit your response!').catch(() => {});
   },
 
   async resetGate(type) {
@@ -2326,6 +2373,9 @@ const App = {
     /* Check organizer permission */
     try { State.canOrganize = await DB.isAllowedOrganizer(State.user.email); }
     catch(e) { console.error('isAllowedOrganizer:', e); }
+
+    /* Subscribe to push notifications (asks permission if not yet granted) */
+    Push.subscribe().catch(() => {});
 
     /* Resolve pending invites and join codes */
     try { await TripManager.acceptPendingInvites(); }
@@ -3299,6 +3349,7 @@ const Planning = {
     try {
       await DB.sendStepComment(stepKey, text);
       await this.loadAndRenderComments(stepKey);
+      Push.notify(State.activeTripId, `${Auth.displayName(State.user)} commented`, text.slice(0, 80)).catch(() => {});
     } catch(e) {
       Toast.show('Could not post comment', 'error');
       console.error(e);
