@@ -1,0 +1,25 @@
+{
+  "name": "Voyage — Group Travel Planner",
+  "short_name": "Voyage",
+  "description": "Plan group trips together",
+  "start_url": "/Voyage/",
+  "scope": "/Voyage/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E8452C",
+  "theme_color": "#E8452C",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#E8452C">
+<meta name="apple-mobile-web-app-title" content="Voyage">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon.svg">
 <title>Voyage — Group Travel Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -4347,6 +4350,10 @@ window.addEventListener('unhandledrejection', e => {
 });
 
 Auth.init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/Voyage/sw.js').catch(e => console.warn('SW registration failed:', e));
+}
 
 </script>
 </body>

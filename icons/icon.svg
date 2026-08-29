@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,700&amp;display=swap');
+    </style>
+  </defs>
+  <circle cx="256" cy="256" r="256" fill="#E8452C"/>
+  <text
+    x="256"
+    y="378"
+    font-family="'Playfair Display', Georgia, serif"
+    font-style="italic"
+    font-weight="700"
+    font-size="290"
+    fill="white"
+    text-anchor="middle"
+    dominant-baseline="auto">V</text>
+</svg>
