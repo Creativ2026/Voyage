@@ -1823,7 +1823,7 @@ const TripManager = {
   },
 
   async acceptPendingInvites() {
-    if (!State.user?.email) return;
+    if (!State.user?.email) return [];
     try {
       const pending = await DB.checkPendingInvites(State.user.email);
       for (const inv of pending) {
@@ -1831,7 +1831,8 @@ const TripManager = {
         await DB.acceptInvite(inv.trip_id, State.user.email);
       }
       if (pending.length) Toast.show(`Joined ${pending.length} trip${pending.length > 1 ? 's' : ''}!`, 'success');
-    } catch(e) { console.error('Invite check failed', e); }
+      return pending.map(inv => inv.trip_id);
+    } catch(e) { console.error('Invite check failed', e); return []; }
   },
 
   async joinByCode(code) {
@@ -2385,7 +2386,8 @@ const App = {
     Push.subscribe().catch(() => {});
 
     /* Resolve pending invites and join codes */
-    try { await TripManager.acceptPendingInvites(); }
+    let invitedTripIds = [];
+    try { invitedTripIds = await TripManager.acceptPendingInvites(); }
     catch(e) { console.error('acceptPendingInvites:', e); }
 
     const joinCode = TripManager.checkJoinParam() || localStorage.getItem('voyage_pending_join');
@@ -2404,7 +2406,7 @@ const App = {
        after getSession() returns, so retry up to 3 times with back-off. */
     try {
       const cookieTrip = document.cookie.match(/voyage_trip=([^;]+)/)?.[1];
-      const savedId = joinedTripId || localStorage.getItem('voyage_active_trip') || cookieTrip;
+      const savedId = joinedTripId || invitedTripIds[invitedTripIds.length - 1] || localStorage.getItem('voyage_active_trip') || cookieTrip;
 
       for (let attempt = 1; attempt <= 3; attempt++) {
         State.trips = await DB.loadUserTrips();
