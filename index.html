@@ -692,11 +692,10 @@ textarea.field-input { resize: vertical; }
       <button class="nav-tab" data-page="chat" onclick="App.switchPage('chat',this)">Chat</button>
     </nav>
     <div class="header-right">
-      <div class="user-pill" onclick="Auth.editName()" title="Edit your name" style="cursor:pointer;">
+      <div class="user-pill" onclick="Auth.editName()" title="Edit your name / sign out" style="cursor:pointer;">
         <div class="user-av" id="user-av">?</div>
         <span id="user-name">...</span>
       </div>
-      <button class="btn btn-sm btn-ghost" onclick="Auth.signOut()">Sign out</button>
     </div>
   </header>
 
