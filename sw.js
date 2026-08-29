@@ -19,6 +19,9 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  /* Only handle same-origin requests — let Supabase API calls pass through untouched */
+  if (!e.request.url.startsWith(self.location.origin)) return;
+
   /* Network-first: always try to fetch fresh; fall back to cache */
   e.respondWith(
     fetch(e.request)
