@@ -1439,22 +1439,18 @@ const DB = {
 
   /* ── Votes ──────────────────────────────────────────── */
   async saveVote(cities, comment) {
-    const payload = {
+    /* Delete any prior vote for this user+trip, then insert fresh */
+    const { error: delErr } = await sb.from('votes')
+      .delete()
+      .eq('trip_id', State.activeTripId)
+      .eq('user_id', State.user.id);
+    if (delErr) throw delErr;
+    const { error } = await sb.from('votes').insert({
+      trip_id: State.activeTripId, user_id: State.user.id,
       display_name: Auth.displayName(State.user),
       cities, comment: comment || null, voted_at: new Date().toISOString(),
-    };
-    const { data: existing } = await sb.from('votes')
-      .select('id').eq('trip_id', State.activeTripId).eq('user_id', State.user.id).maybeSingle();
-    if (existing) {
-      const { error } = await sb.from('votes').update(payload)
-        .eq('trip_id', State.activeTripId).eq('user_id', State.user.id);
-      if (error) throw error;
-    } else {
-      const { error } = await sb.from('votes').insert({
-        trip_id: State.activeTripId, user_id: State.user.id, ...payload,
-      });
-      if (error) throw error;
-    }
+    });
+    if (error) throw error;
   },
 
   async loadVotes() {
