@@ -3747,7 +3747,13 @@ const Planning = {
             <button class="btn btn-sm btn-ghost" onclick="Planning.startNewDestRound()">Start New Round</button>
           </div>
         </div>
-      ` : '<div class="mt-16"><button class="btn" onclick="Planning.next()">Organizer will confirm →</button></div>'}
+      ` : State.tripConfig?.dest ? `
+        <div class="gate-strip gate-closed mt-16">
+          <div class="t-small t-upper t-muted mb-8">Trip Confirmed</div>
+          <p style="font-size:14px;margin-bottom:12px;">The organizer has confirmed <strong>${escapeHtml(State.tripConfig.dest)}</strong>.</p>
+          <button class="btn btn-brand" onclick="Planning.next()">View Confirmed Trip →</button>
+        </div>
+      ` : '<div class="gate-strip gate-open mt-16"><p class="t-muted" style="font-size:13px;">Waiting for the organizer to confirm the destination…</p></div>'}
       ${this.renderStepComments('results')}`;
   },
 
