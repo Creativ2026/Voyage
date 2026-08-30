@@ -1439,12 +1439,22 @@ const DB = {
 
   /* ── Votes ──────────────────────────────────────────── */
   async saveVote(cities, comment) {
-    const { error } = await sb.from('votes').upsert({
-      trip_id: State.activeTripId, user_id: State.user.id,
+    const payload = {
       display_name: Auth.displayName(State.user),
-      cities, comment: comment || null, voted_at: new Date()
-    }, { onConflict: 'trip_id,user_id' });
-    if (error) throw error;
+      cities, comment: comment || null, voted_at: new Date().toISOString(),
+    };
+    const { data: existing } = await sb.from('votes')
+      .select('id').eq('trip_id', State.activeTripId).eq('user_id', State.user.id).maybeSingle();
+    if (existing) {
+      const { error } = await sb.from('votes').update(payload)
+        .eq('trip_id', State.activeTripId).eq('user_id', State.user.id);
+      if (error) throw error;
+    } else {
+      const { error } = await sb.from('votes').insert({
+        trip_id: State.activeTripId, user_id: State.user.id, ...payload,
+      });
+      if (error) throw error;
+    }
   },
 
   async loadVotes() {
@@ -3671,8 +3681,7 @@ const Planning = {
       Toast.show('Vote saved for everyone!', 'success');
       this.next();
     } catch(e) {
-      const msg = e?.message || e?.details || e?.hint || JSON.stringify(e);
-      Toast.show(`Vote error: ${msg}`, 'error');
+      Toast.show('Failed to save vote — please try again', 'error');
       console.error('saveVote error:', e);
     }
   },
