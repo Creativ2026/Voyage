@@ -3681,7 +3681,8 @@ const Planning = {
       Toast.show('Vote saved for everyone!', 'success');
       this.next();
     } catch(e) {
-      Toast.show('Failed to save vote — please try again', 'error');
+      const msg = e?.message || e?.details || e?.hint || e?.code || JSON.stringify(e);
+      Toast.show(`Vote error: ${msg}`, 'error');
       console.error('saveVote error:', e);
     }
   },
