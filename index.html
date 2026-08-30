@@ -3759,10 +3759,28 @@ const Planning = {
 
   /* ── STEP 7: CONFIRM ───────────────────────────────── */
   renderConfirm() {
-    const cfg = State.tripConfig;
+    const cfg   = State.tripConfig;
+    const isOrg = TripManager.isOrganizer();
     const w = this.getWinningDates();
     const startVal = cfg.start || w?.startStr || '';
     const endVal   = cfg.end   || w?.endStr   || '';
+    if (!isOrg) {
+      return `
+        ${this.renderGateStrip('destination')}
+        ${cfg.dest ? `
+          <div class="gate-strip gate-closed mb-16">
+            <div class="t-small t-upper t-muted mb-4">Trip Confirmed</div>
+            <p style="font-size:15px;font-weight:600;margin-bottom:4px;">${escapeHtml(cfg.dest)}</p>
+            ${cfg.start ? `<p class="t-muted" style="font-size:13px;">${cfg.start}${cfg.end ? ' → ' + cfg.end : ''}</p>` : ''}
+          </div>
+          <button class="btn btn-brand" onclick="Planning.next()">View Itinerary →</button>
+        ` : `
+          <div class="gate-strip gate-open mb-16">
+            <p class="t-muted" style="font-size:13px;">Waiting for the organizer to finalise the trip details…</p>
+          </div>
+        `}
+        ${this.renderStepComments('confirm')}`;
+    }
     return `
       ${this.renderGateStrip('destination')}
       <div class="section-title">Organizer — Final Confirmation</div>
