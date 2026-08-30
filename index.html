@@ -3671,15 +3671,22 @@ const Planning = {
 
   async submitVote() {
     if (!State._myVotes?.length) { Toast.show('Select at least 1 destination', 'error'); return; }
+    if (State._voteSaving) return;
+    State._voteSaving = true;
+    const btn = document.querySelector('[onclick="Planning.submitVote()"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
     const comment = $('vote-comment')?.value.trim() || '';
     try {
       await DB.saveVote(State._myVotes, comment);
-      Toast.show('Vote saved for everyone!', 'success');
+      Toast.show('Vote saved!', 'success');
       this.next();
     } catch(e) {
       const msg = e?.message || e?.details || e?.hint || e?.code || JSON.stringify(e);
       Toast.show(`Vote error: ${msg}`, 'error');
       console.error('saveVote error:', e);
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit Vote →'; }
+    } finally {
+      State._voteSaving = false;
     }
   },
 
